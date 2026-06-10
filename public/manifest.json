@@ -1,0 +1,21 @@
+{
+    "name": "Faith App by RCCGDC",
+    "short_name": "Faith",
+    "description": "Faith app by RCCGDC for church members, events, and community engagement.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FFFFFF",
+    "theme_color": "#0D47A1",
+    "icons": [
+        {
+            "src": "/image.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/image.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
