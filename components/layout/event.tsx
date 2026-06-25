@@ -194,7 +194,7 @@ export const EventsPage = () => {
         null;
 
     return (
-        <div className="min-h-screen bg-[#F4F1EA] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#F4F1EA]">
+        <div className="min-h-screen text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#F4F1EA]">
 
             {/* ── Fixed left image panel ─────────────────────────────────── */}
             <div className="fixed top-0 left-0 w-full lg:w-[41.666667%] h-[40vh] lg:h-screen z-0 overflow-hidden">
@@ -210,7 +210,7 @@ export const EventsPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen relative z-10 pointer-events-none">
                 <div className="h-[40vh] lg:h-screen lg:col-span-5" />
 
-                <div className="lg:col-span-7 bg-[#F4F1EA] pt-6 lg:pt-12 pointer-events-auto">
+                <div className="lg:col-span-7 bg-[#FFF] pt-6 lg:pt-12 pointer-events-auto">
 
                     {/* ── Hero content ──────────────────────────────────── */}
                     <div className="p-6 lg:px-12 flex flex-col justify-between min-h-[45vh] lg:min-h-[55vh]">

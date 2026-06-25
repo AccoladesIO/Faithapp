@@ -45,7 +45,7 @@ export const BottomNav = ({
                             }`}
                     >
                         <Icon
-                            size={20}
+                            size={18}
                             className={isActive ? 'text-[#121212]' : 'text-[#8A817C]'}
                             strokeWidth={isActive ? 2.5 : 1.5}
                         />

@@ -212,9 +212,15 @@ export const HomePage = () => {
                 </div>
             ) : heroEvent ? (
                 <div className="relative w-full h-[60vh] md:h-[65vh] overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#FFFFFF] via-transparent to-black/10" />
+                            <div className="absolute inset-0">
+                                <img
+                                    src="https://img.freepik.com/premium-photo/ultra-quality-picture-worship-concept-worship-praise-god-high-detail-8k_1257223-169575.jpg"
+                                    alt={`UPCOMING_EVENT.title`}
+                                    className="w-full h-full object-cover scale-105 transform transition duration-10000 ease-out"
+                                />
+                                <div className="absolute inset-0 bg-black/40" />
+                                <div className="absolute inset-0 bg-gradient from-[#FFFFFF] via-transparent to-black/10" />
+                            </div>
 
                     {/* Top bar */}
                     <div className="absolute top-0 inset-x-0 p-6 flex justify-between items-center bg-gradient-to-b from-black/40 to-transparent z-10">
@@ -308,9 +314,7 @@ export const HomePage = () => {
             <div className="px-6 mt-10 space-y-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xs uppercase tracking-widest text-gray-500 font-semibold">Updates & Notices</h3>
-                    <button className="text-xs text-[#121212] font-semibold flex items-center gap-1 hover:underline">
-                        See All <ArrowRight size={12} />
-                    </button>
+                    
                 </div>
 
                 {announcementsLoading ? (

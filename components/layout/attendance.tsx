@@ -9,7 +9,6 @@ import {
     CheckCircle2,
     Flame,
     Award,
-    Loader2,
     RefreshCw,
 } from "lucide-react";
 import {
@@ -20,7 +19,7 @@ import {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatCheckinDate(iso: string): { month: string; day: string } {
+function formatDateBlock(iso: string): { month: string; day: string } {
     const d = new Date(iso);
     return {
         month: d.toLocaleString("en-GB", { month: "short" }),
@@ -29,8 +28,7 @@ function formatCheckinDate(iso: string): { month: string; day: string } {
 }
 
 function formatCheckinTime(iso: string): string {
-    const local = iso.endsWith("Z") ? iso.slice(0, -1) : iso;
-    return new Date(local).toLocaleTimeString("en-GB", {
+    return new Date(iso).toLocaleTimeString("en-GB", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
@@ -38,122 +36,93 @@ function formatCheckinTime(iso: string): string {
 }
 
 function formatLastCheckinDate(iso: string): string {
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-GB", {
+    return new Date(iso).toLocaleDateString("en-GB", {
         day: "numeric",
         month: "long",
         year: "numeric",
     });
 }
 
-function formatEventType(slot: AttendanceRecord["serviceSlot"]): string {
-    if (!slot) return "SERVICE";
-    // Derive a readable type from slot/event context — event name as fallback
-    const name = slot.event.name.toUpperCase();
+function formatEventType(record: AttendanceRecord): string {
+    const name = (record.event?.name ?? "").toUpperCase();
     if (name.includes("SUNDAY")) return "SUNDAY SERVICE";
     if (name.includes("MIDWEEK") || name.includes("WEDNESDAY")) return "MIDWEEK SERVICE";
     if (name.includes("SATURDAY")) return "SATURDAY SERVICE";
+    if (record.serviceSlot) return "SERVICE";
     return "SERVICE";
 }
 
-// ─── Status badge — forward-compatible with EARLY / LATE when API adds them ──
+// ─── Status badge ─────────────────────────────────────────────────────────────
 
-const StatusBadge = ({ status }: { status: AttendanceStatus }) => {
+function StatusBadge({ status }: { status: AttendanceStatus }) {
     switch (status) {
         case "EARLY":
             return (
                 <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
                     <CheckCircle2 size={11} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                        Early
-                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Early</span>
                 </div>
             );
         case "PRESENT":
             return (
                 <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
                     <CheckCircle2 size={11} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                        Present
-                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Present</span>
                 </div>
             );
         case "LATE":
             return (
                 <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                     <AlertCircle size={11} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                        Late
-                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Late</span>
                 </div>
             );
         case "ABSENT":
             return (
                 <div className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
                     <XCircle size={11} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                        Absent
-                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Absent</span>
                 </div>
             );
     }
-};
+}
 
-// ─── Attendance log card ──────────────────────────────────────────────────────
+// ─── Attendance card ──────────────────────────────────────────────────────────
 
 function AttendanceCard({ record }: { record: AttendanceRecord }) {
     const isAbsent = record.status === "ABSENT";
 
-    // Date to display: prefer slot event date, fall back to createdAt
-    const dateSource = record.serviceSlot?.event.eventDate
-        ? record.serviceSlot.event.eventDate + "T00:00:00"
+    // Date: prefer event.eventDate, fall back to createdAt
+    const dateSource = record.event?.eventDate
+        ? record.event.eventDate + "T00:00:00"
         : record.createdAt;
-    const { month, day } = formatCheckinDate(dateSource);
+    const { month, day } = formatDateBlock(dateSource);
 
     // Title: prefer event name, fall back to "Unrecorded Absence"
-    const title = record.serviceSlot?.event.name ?? "Unrecorded Absence";
+    const title = record.event?.name ?? "Unrecorded Absence";
 
-    // Description: event description or slot name
-    const subtitle =
-        record.serviceSlot?.event.description ??
-        record.serviceSlot?.name ??
-        null;
+    // Subtitle: prefer event description, then slot name
+    const subtitle = record.event?.description ?? record.serviceSlot?.name ?? null;
 
-    const eventType = formatEventType(record.serviceSlot);
+    const eventType = formatEventType(record);
 
     return (
-        <div
-            className={`bg-white border border-[#121212]/5 p-4 shadow-sm flex items-center justify-between transition-all hover:border-[#121212]/10 ${isAbsent ? "opacity-65" : ""
-                }`}
-        >
-            {/* Date block + text */}
+        <div className={`bg-white border border-[#121212]/5 p-4 shadow-sm flex items-center justify-between transition-all hover:border-[#121212]/10 ${isAbsent ? "opacity-65" : ""}`}>
             <div className="flex items-start gap-4 flex-grow pr-2">
                 <div className="bg-[#F4F1EA] text-[#121212] px-3 py-2 h-[100px] flex flex-col items-center justify-center min-w-[68px] border border-[#121212]/5 flex-shrink-0">
-                    <span className="text-xs font-bold leading-none text-center">
-                        {month}
-                    </span>
-                    <span className="text-lg font-bold tracking-tighter leading-none mt-1">
-                        {day}
-                    </span>
+                    <span className="text-xs font-bold leading-none text-center">{month}</span>
+                    <span className="text-lg font-bold tracking-tighter leading-none mt-1">{day}</span>
                 </div>
 
                 <div className="space-y-0.5">
-                    <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400">
-                        {eventType}
-                    </span>
-                    <h3 className="text-sm font-medium text-[#121212] leading-snug">
-                        {title}
-                    </h3>
-                    {subtitle && (
-                        <p className="text-xs text-gray-500 font-light">{subtitle}</p>
-                    )}
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400">{eventType}</span>
+                    <h3 className="text-sm font-medium text-[#121212] leading-snug">{title}</h3>
+                    {subtitle && <p className="text-xs text-gray-500 font-light">{subtitle}</p>}
                 </div>
             </div>
 
-            {/* Status + time */}
             <div className="flex flex-col items-end justify-between self-stretch min-w-[85px] text-right">
                 <StatusBadge status={record.status} />
-
                 {record.checkinTime && (
                     <span className="text-[10px] text-gray-400 font-light flex items-center justify-end gap-0.5">
                         <Clock size={10} />
@@ -171,10 +140,7 @@ function HistorySkeleton() {
     return (
         <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-                <div
-                    key={i}
-                    className="bg-white border border-[#121212]/5 p-4 shadow-sm flex items-center gap-4 animate-pulse"
-                >
+                <div key={i} className="bg-white border border-[#121212]/5 p-4 shadow-sm flex items-center gap-4 animate-pulse">
                     <div className="bg-[#F4F1EA] h-[100px] min-w-[68px]" />
                     <div className="flex-1 space-y-2">
                         <div className="h-2.5 w-16 bg-gray-100 rounded" />
@@ -222,9 +188,7 @@ export const PersonalAttendancePage = () => {
                         </span>
                         <span className="text-2xl font-semibold tracking-tight mt-1">
                             {isLoading ? "—" : stats.attendanceStreak}{" "}
-                            <span className="text-xs text-gray-400 font-light font-sans">
-                                wks
-                            </span>
+                            <span className="text-xs text-gray-400 font-light font-sans">wks</span>
                         </span>
                     </div>
 
@@ -234,16 +198,12 @@ export const PersonalAttendancePage = () => {
                         </span>
                         <span className="text-2xl font-semibold tracking-tight mt-1">
                             {isLoading ? "—" : stats.presentCount}{" "}
-                            <span className="text-xs text-gray-400 font-light font-sans">
-                                logs
-                            </span>
+                            <span className="text-xs text-gray-400 font-light font-sans">logs</span>
                         </span>
                     </div>
 
                     <div className="bg-white p-4 border border-[#121212]/5 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
-                            Consistency
-                        </span>
+                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Consistency</span>
                         <span className="text-2xl font-semibold tracking-tight text-[#8A817C] mt-1">
                             {isLoading ? "—" : `${stats.attendanceRatePercentage}%`}
                         </span>
@@ -259,8 +219,7 @@ export const PersonalAttendancePage = () => {
                     </span>
                     {stats.lastCheckedInDate && !isLoading && (
                         <span className="text-xs text-gray-400 font-light">
-                            Last log:{" "}
-                            {formatLastCheckinDate(stats.lastCheckedInDate)}
+                            Last log: {formatLastCheckinDate(stats.lastCheckedInDate)}
                         </span>
                     )}
                 </div>
@@ -270,17 +229,12 @@ export const PersonalAttendancePage = () => {
                 ) : error ? (
                     <div className="flex flex-col items-start gap-3 py-10 text-gray-400">
                         <p className="text-sm font-light">{error}</p>
-                        <button
-                            onClick={refetch}
-                            className="flex items-center gap-1.5 text-xs font-semibold text-[#121212] hover:underline"
-                        >
+                        <button onClick={refetch} className="flex items-center gap-1.5 text-xs font-semibold text-[#121212] hover:underline">
                             <RefreshCw size={12} /> Retry
                         </button>
                     </div>
                 ) : records.length === 0 ? (
-                    <p className="text-sm text-gray-400 font-light py-10 text-center">
-                        No attendance records yet.
-                    </p>
+                    <p className="text-sm text-gray-400 font-light py-10 text-center">No attendance records yet.</p>
                 ) : (
                     <div className="space-y-3">
                         {records.map((record) => (

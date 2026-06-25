@@ -29,7 +29,7 @@ export interface AttendanceSlot {
     memberCheckinStartOverride: string | null;
     checkinStopOverride: string | null;
     allowedDistanceOverride: number | null;
-    event: AttendanceEvent;
+    // NOTE: event is now a sibling of serviceSlot on the record, not nested inside it
 }
 
 export interface AttendanceRecord {
@@ -40,7 +40,8 @@ export interface AttendanceRecord {
     status: AttendanceStatus;
     roleAtCheckin: string;
     location: { latitude: number; longitude: number } | null;
-    serviceSlot: AttendanceSlot | null;
+    event: AttendanceEvent | null;       // top-level sibling
+    serviceSlot: AttendanceSlot | null;  // top-level sibling, no nested event
 }
 
 // ─── Derived stats ────────────────────────────────────────────────────────────
@@ -49,23 +50,16 @@ export interface AttendanceStats {
     totalCount: number;
     presentCount: number;
     attendanceRatePercentage: number;
-    lastCheckedInDate: string | null; // ISO string
-    attendanceStreak: number; // consecutive calendar weeks with ≥1 PRESENT
+    lastCheckedInDate: string | null;
+    attendanceStreak: number;
 }
 
-/**
- * Derive streak as the number of consecutive ISO calendar weeks (ending today)
- * that contain at least one PRESENT/EARLY/LATE record.
- */
 function getISOWeek(date: Date): string {
-    // Returns "YYYY-Www" so consecutive weeks sort correctly
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7; // Mon=1 … Sun=7
+    const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil(
-        ((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7
-    );
+    const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
     return `${d.getUTCFullYear()}-W${weekNo.toString().padStart(2, "0")}`;
 }
 
@@ -80,7 +74,6 @@ function deriveStats(records: AttendanceRecord[]): AttendanceStats {
     const attendanceRatePercentage =
         totalCount === 0 ? 0 : Math.round((presentCount / totalCount) * 100);
 
-    // Last check-in: most recent non-null checkinTime
     const checkinTimes = presentRecords
         .map((r) => r.checkinTime)
         .filter((t): t is string => t !== null)
@@ -88,7 +81,6 @@ function deriveStats(records: AttendanceRecord[]): AttendanceStats {
         .reverse();
     const lastCheckedInDate = checkinTimes[0] ?? null;
 
-    // Streak: walk backwards week-by-week from current week
     const presentWeeks = new Set(
         presentRecords
             .filter((r) => r.checkinTime)
@@ -96,28 +88,18 @@ function deriveStats(records: AttendanceRecord[]): AttendanceStats {
     );
 
     let streak = 0;
-    const today = new Date();
-    let cursor = new Date(today);
-
-    // Walk back up to 2 years max to avoid infinite loops
+    const cursor = new Date();
     for (let i = 0; i < 104; i++) {
         const week = getISOWeek(cursor);
         if (presentWeeks.has(week)) {
             streak++;
-            // Go back 7 days
             cursor.setDate(cursor.getDate() - 7);
         } else {
             break;
         }
     }
 
-    return {
-        totalCount,
-        presentCount,
-        attendanceRatePercentage,
-        lastCheckedInDate,
-        attendanceStreak: streak,
-    };
+    return { totalCount, presentCount, attendanceRatePercentage, lastCheckedInDate, attendanceStreak: streak };
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -148,13 +130,8 @@ export function useAttendanceHistory(): UseAttendanceHistoryReturn {
                 );
                 if (!cancelled) setRecords(res.data.data.data);
             } catch (err: unknown) {
-                if (!cancelled) {
-                    setError(
-                        err instanceof Error
-                            ? err.message
-                            : "Failed to load attendance history."
-                    );
-                }
+                if (!cancelled)
+                    setError(err instanceof Error ? err.message : "Failed to load attendance history.");
             } finally {
                 if (!cancelled) setIsLoading(false);
             }
