@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, Shield, Bell, CircleHelp, LogOut, ChevronRight, ChevronDown, Sparkles, HeartHandshake, Calendar, ClipboardList, PackagePlus, Search } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
 
 interface UserProfile {
     name: string;
@@ -47,6 +48,7 @@ export const ProfilePage = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
+    const { logout } = useAuth()
 
     const filteredInventory = useMemo(() => {
         return MOCK_INVENTORY_ITEMS.filter(item =>
@@ -450,7 +452,7 @@ export const ProfilePage = () => {
                 </div>
 
                 <div className="pt-2">
-                    <button className="w-full bg-red-50 text-red-600 border border-red-100/50 text-xs uppercase tracking-widest font-semibold py-3.5 rounded-xl hover:bg-red-100/70 transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                    <button onClick={logout} className="w-full bg-red-50 text-red-600 border border-red-100/50 text-xs uppercase tracking-widest font-semibold py-3.5 rounded-xl hover:bg-red-100/70 transition-colors flex items-center justify-center gap-1.5 shadow-sm">
                         <LogOut size={14} /> Log Out Account
                     </button>
                 </div>

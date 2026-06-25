@@ -1,6 +1,10 @@
+"use client"
+
+
 import React from 'react'
 import Shell from '../Shell'
 import { EventsPage } from '@/components/layout/event'
+import { withAuth } from '@/utils/auth/with-auth';
 
 const page = () => {
   return (
@@ -10,4 +14,4 @@ const page = () => {
   )
 }
 
-export default page
+export default withAuth(page)

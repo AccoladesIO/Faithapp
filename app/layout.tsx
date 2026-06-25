@@ -1,6 +1,7 @@
 import { Plus_Jakarta_Sans, Outfit, Sacramento, Tangerine } from "next/font/google";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { AuthProvider } from "@/context/auth-context";
 
 export const metadata: Metadata = {
   title: "Faith App by RCCGDC",
@@ -57,8 +58,8 @@ export default function RootLayout({
       lang="en"
       className={`${headingFont.variable} ${bodyFont.variable} ${scriptFont.variable} ${logoFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-body bg-slate-50 text-slate-900 max-w-5xl w-full mx-auto">
-        {children}
+      <body className="min-h-full font-body bg-slate-50 text-slate-900 w-full mx-auto">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

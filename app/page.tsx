@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { authService } from '@/utils/auth/auth-services'
+import { authService } from '@/utils/auth/auth'
 import { OnboardingPage } from '@/components/layout/onboarding-page'
 import { LoadingScreen } from '@/components/layout/loading'
 import { LoginPage } from '@/components/layout/login-page'

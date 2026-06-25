@@ -1,6 +1,9 @@
+"use client"
+
 import React from 'react'
 import Shell from '../Shell'
 import { HomePage } from '@/components/layout/home'
+import { withAuth } from '@/utils/auth/with-auth'
 
 const page = () => {
   return (
@@ -10,4 +13,4 @@ const page = () => {
   )
 }
 
-export default page
+export default withAuth(page)
