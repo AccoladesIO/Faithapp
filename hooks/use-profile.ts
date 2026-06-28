@@ -1,4 +1,3 @@
-// hooks/use-profile.ts
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,12 +11,13 @@ export interface Department {
 
 export interface WorkerProfile {
     id: string;
-    department: Department;
     status: string;
     profession: string;
     yearJoinedWorkforce: string;
     completedSOD: boolean;
     completedBibleCollege: boolean;
+    department: Department;
+    secondaryDepartment: Department | null;
 }
 
 export interface UserProfile {
@@ -30,6 +30,9 @@ export interface UserProfile {
     status: string;
     gender: string;
     maritalStatus: string;
+    birthDay: number | null;
+    birthMonth: number | null;
+    birthYear: number | null;
     changedPassword: boolean;
     workerProfile: WorkerProfile | null;
 }
@@ -55,11 +58,8 @@ export function useProfile(): UseProfileReturn {
                 const res = await api.get<{ data: UserProfile }>("/auth/me");
                 if (!cancelled) setProfile(res.data.data);
             } catch (err: unknown) {
-                if (!cancelled) {
-                    setError(
-                        err instanceof Error ? err.message : "Failed to load profile."
-                    );
-                }
+                if (!cancelled)
+                    setError(err instanceof Error ? err.message : "Failed to load profile.");
             } finally {
                 if (!cancelled) setIsLoading(false);
             }

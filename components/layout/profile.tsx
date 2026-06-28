@@ -1,464 +1,317 @@
-"use client"
+"use client";
 
-import React, { useState, useMemo } from 'react';
-import { User, Shield, Bell, CircleHelp, LogOut, ChevronRight, ChevronDown, Sparkles, HeartHandshake, Calendar, ClipboardList, PackagePlus, Search } from 'lucide-react';
-import { useAuth } from '@/context/auth-context';
+import React, { useState } from "react";
+import {
+    User, Shield, Bell, CircleHelp, LogOut,
+    ChevronRight, ChevronDown, Sparkles, HeartHandshake,
+    Calendar, ClipboardList, Loader2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+import { useProfile } from "@/hooks/use-profile";
 
-interface UserProfile {
-    name: string;
-    email: string;
-    role: 'MEMBER' | 'WORKER';
-    joinDate: string;
-    avatar: string;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatBirthday(day: number | null, month: number | null, year: number | null): string {
+    if (!day || !month || !year) return "—";
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${months[month - 1]} ${day}, ${year}`;
 }
 
-const CURRENT_USER: UserProfile = {
-    name: 'Sarah Jenkins',
-    email: 'sarah.jenkins@christfamily.org',
-    role: 'WORKER',
-    joinDate: 'Joined Oct 2024',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop'
-};
+// ─── Avatar initials fallback ─────────────────────────────────────────────────
 
-const MOCK_INVENTORY_ITEMS = [
-    { id: 'inv_1', name: 'Soundcraft UI24R Wireless Mixer' },
-    { id: 'inv_2', name: 'Shure SM58 Wireless Microphone' },
-    { id: 'inv_3', name: 'Epson Pro Projector 6K Lumens' },
-    { id: 'inv_4', name: 'Heavy Duty XLR Cable 10m' },
-    { id: 'inv_5', name: 'LED Stage Par Can Light' },
-];
+function AvatarInitials({ name }: { name: string }) {
+    const parts = name.trim().split(" ");
+    const initials = parts.length >= 2
+        ? `${parts[0][0]}${parts[parts.length - 1][0]}`
+        : parts[0]?.[0] ?? "?";
+    return (
+        <div className="w-24 h-24 rounded-full border-4 border-white bg-[#121212] flex items-center justify-center shadow-lg">
+            <span className="text-2xl font-semibold text-white uppercase">{initials}</span>
+        </div>
+    );
+}
+
+// ─── Accordion item ───────────────────────────────────────────────────────────
+
+function AccordionItem({
+    id, active, onToggle, icon: Icon, label, children,
+}: {
+    id: string;
+    active: boolean;
+    onToggle: (id: string) => void;
+    icon: React.ElementType;
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div>
+            <button
+                onClick={() => onToggle(id)}
+                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
+            >
+                <div className="flex items-center gap-3">
+                    <Icon size={16} className="text-[#8A817C]" />
+                    <span className="text-sm font-normal">{label}</span>
+                </div>
+                {active
+                    ? <ChevronDown size={14} className="text-gray-400" />
+                    : <ChevronRight size={14} className="text-gray-400" />}
+            </button>
+            {active && (
+                <div className="px-4 pb-4 bg-[#F9F9F9] border-t border-[#121212]/5">
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Profile skeleton ─────────────────────────────────────────────────────────
+
+function ProfileSkeleton() {
+    return (
+        <div className="px-6 mt-8 max-w-md mx-auto space-y-4 animate-pulse">
+            <div className="h-4 w-32 bg-gray-100 rounded mx-auto" />
+            <div className="h-3 w-48 bg-gray-100 rounded mx-auto" />
+            <div className="h-24 bg-gray-100 rounded-2xl" />
+            <div className="h-24 bg-gray-100 rounded-2xl" />
+        </div>
+    );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export const ProfilePage = () => {
     const [activeSection, setActiveSection] = useState<string | null>(null);
+    const { logout } = useAuth();
+    const { profile, isLoading } = useProfile();
+    const router = useRouter();
 
-    const [leaveForm, setLeaveForm] = useState({
-        dateFrom: '',
-        dateTo: '',
-        reason: ''
-    });
+    const toggleSection = (id: string) =>
+        setActiveSection((prev) => (prev === id ? null : id));
 
-    const [inventoryForm, setInventoryForm] = useState({
-        inventory_id: '',
-        quantity_requested: 1,
-        from_date: '',
-        to_date: '',
-        reason: '',
-        status: 'Pending'
-    });
+    const fullName = profile
+        ? `${profile.firstname} ${profile.lastname}`
+        : "";
 
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
-    const { logout } = useAuth()
-
-    const filteredInventory = useMemo(() => {
-        return MOCK_INVENTORY_ITEMS.filter(item =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [searchQuery]);
-
-    const selectedInventoryName = useMemo(() => {
-        return MOCK_INVENTORY_ITEMS.find(item => item.id === inventoryForm.inventory_id)?.name || 'Select an item';
-    }, [inventoryForm.inventory_id]);
-
-    const toggleSection = (sectionName: string) => {
-        setActiveSection(prev => prev === sectionName ? null : sectionName);
-    };
-
-    const handleLeaveSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const payload = {
-            dateFrom: leaveForm.dateFrom ? leaveForm.dateFrom.replace('T', ' ') : '',
-            dateTo: leaveForm.dateTo ? leaveForm.dateTo.replace('T', ' ') : '',
-            reason: leaveForm.reason
-        };
-        console.log('LEAVE_REQUEST POST BODY DATA:', payload);
-    };
-
-    const handleInventorySubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('INVENTORY_REQUEST POST BODY DATA:', {
-            ...inventoryForm,
-            requester_id: 'current_user_id_here',
-            department_id: 'current_department_id_here'
-        });
-    };
+    const isWorker = profile?.role === "WORKER";
 
     return (
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
 
-            <div className="relative w-full h-[24vh] md:h-[28vh] overflow-hidden">
+            {/* ── Hero banner ────────────────────────────────────────────── */}
+            <div className="relative w-full h-[40vh] md:h-[45vh] overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1445108771252-d1cc31a02a3c?q=80&w=1200&auto=format&fit=crop"
                     alt="Church sanctuary backdrop"
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9]/40 to-transparent" />
+                {/* <div className="absolute inset-0 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9]/40 to-transparent" /> */}
             </div>
 
+            {/* ── Avatar + name ─────────────────────────────────────────── */}
             <div className="px-6 -mt-16 relative z-10 flex flex-col items-center text-center border-b border-[#121212]/5 pb-6 bg-gradient-to-b from-transparent to-[#F9F9F9]">
-                <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gray-200 shadow-lg">
-                    <img src={CURRENT_USER.avatar} alt={CURRENT_USER.name} className="w-full h-full object-cover" />
-                </div>
+                {isLoading ? (
+                    <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 animate-pulse shadow-lg" />
+                ) : (
+                    <AvatarInitials name={fullName || "?"} />
+                )}
 
                 <h2 className="text-2xl font-light tracking-tight mt-3 text-[#121212]">
-                    {CURRENT_USER.name}
+                    {isLoading ? (
+                        <span className="inline-block h-7 w-36 bg-gray-100 rounded animate-pulse" />
+                    ) : fullName}
                 </h2>
                 <p className="text-xs text-gray-500 font-light mt-0.5">
-                    {CURRENT_USER.email}
+                    {isLoading ? (
+                        <span className="inline-block h-3 w-48 bg-gray-100 rounded animate-pulse" />
+                    ) : profile?.email}
                 </p>
 
-                <div className="flex items-center gap-2 mt-3">
-                    <span className="text-[9px] uppercase tracking-wider font-bold bg-[#121212] text-white px-2.5 py-0.5 rounded-full shadow-sm">
-                        {CURRENT_USER.role}
-                    </span>
-                    <span className="text-[10px] text-gray-400 font-light">
-                        {CURRENT_USER.joinDate}
-                    </span>
-                </div>
+                {!isLoading && profile && (
+                    <div className="flex items-center gap-2 mt-3">
+                        <span className="text-[9px] uppercase tracking-wider font-bold bg-[#121212] text-white px-2.5 py-0.5 rounded-full shadow-sm">
+                            {profile.role}
+                        </span>
+                        {profile.workerProfile && (
+                            <span className="text-[10px] text-gray-400 font-light">
+                                {profile.workerProfile.department.name}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
-            <div className="px-6 mt-8 max-w-md mx-auto space-y-6">
+            {isLoading ? (
+                <ProfileSkeleton />
+            ) : (
+                <div className="px-6 mt-8 max-w-md mx-auto space-y-6">
 
-                <div
-                    onClick={() => toggleSection('spiritual_giftings')}
-                    className="bg-[#F4F1EA]/50 border border-[#121212]/5 rounded-2xl p-4 flex flex-col cursor-pointer transition-all hover:bg-[#EADCC9]/30"
-                >
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-[#EADCC9] flex items-center justify-center text-[#121212]">
-                                <Sparkles size={18} />
+                    {/* ── Spiritual giftings ─────────────────────────────── */}
+                    <div
+                        onClick={() => toggleSection("spiritual_giftings")}
+                        className="bg-[#F4F1EA]/50 border border-[#121212]/5 rounded-2xl p-4 flex flex-col cursor-pointer transition-all hover:bg-[#EADCC9]/30"
+                    >
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-[#EADCC9] flex items-center justify-center text-[#121212]">
+                                    <Sparkles size={18} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-[#121212]">Spiritual Giftings</h3>
+                                    <p className="text-xs text-gray-500 font-light mt-0.5">View your assessed domains & callings</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-sm font-medium text-[#121212]">Spiritual Giftings</h3>
-                                <p className="text-xs text-gray-500 font-light mt-0.5">View your assessed domains & callings</p>
-                            </div>
+                            {activeSection === "spiritual_giftings"
+                                ? <ChevronDown size={16} className="text-gray-400" />
+                                : <ChevronRight size={16} className="text-gray-400" />}
                         </div>
-                        {activeSection === 'spiritual_giftings' ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+
+                        {activeSection === "spiritual_giftings" && (
+                            <div className="mt-4 pt-4 border-t border-[#121212]/5 text-xs text-gray-600 space-y-2 font-light">
+                                <p>No gifting assessments recorded yet.</p>
+                            </div>
+                        )}
                     </div>
 
-                    {activeSection === 'spiritual_giftings' && (
-                        <div className="mt-4 pt-4 border-t border-[#121212]/5 text-xs text-gray-600 space-y-2 font-light">
-                            <p><strong>Primary Domain:</strong> Leadership & Administration</p>
-                            <p><strong>Secondary Domain:</strong> Teaching & Exhortation</p>
-                        </div>
-                    )}
-                </div>
+                    {/* ── Worker operations — only for WORKER role ──────── */}
+                    {isWorker && (
+                        <div className="space-y-4">
+                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
+                                Worker Operations
+                            </h4>
 
-                {CURRENT_USER.role === 'WORKER' && (
-                    <div className="space-y-4">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
-                            Worker Operations
-                        </h4>
-
-                        <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
-                            <div>
+                            <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
+                                {/* Leave request — navigates to dedicated page */}
                                 <button
-                                    onClick={() => toggleSection('leave_request')}
+                                    onClick={() => router.push("/leave")}
                                     className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
                                 >
                                     <div className="flex items-center gap-3">
                                         <ClipboardList size={16} className="text-[#8A817C]" />
-                                        <span className="text-sm font-normal">Leave Request</span>
+                                        <div>
+                                            <span className="text-sm font-normal block">Leave Request</span>
+                                            <span className="text-[10px] text-gray-400 font-light">Apply for and manage your leave</span>
+                                        </div>
                                     </div>
-                                    {activeSection === 'leave_request' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+                                    <ChevronRight size={14} className="text-gray-400" />
                                 </button>
-
-                                {activeSection === 'leave_request' && (
-                                    <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5">
-                                        <form onSubmit={handleLeaveSubmit} className="space-y-3.5">
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Date From</label>
-                                                <input
-                                                    type="datetime-local"
-                                                    value={leaveForm.dateFrom}
-                                                    onChange={e => setLeaveForm(prev => ({ ...prev, dateFrom: e.target.value }))}
-                                                    required
-                                                    className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2 text-xs font-sans outline-none focus:border-[#121212]/30"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Date To</label>
-                                                <input
-                                                    type="datetime-local"
-                                                    value={leaveForm.dateTo}
-                                                    onChange={e => setLeaveForm(prev => ({ ...prev, dateTo: e.target.value }))}
-                                                    required
-                                                    className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2 text-xs font-sans outline-none focus:border-[#121212]/30"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Reason</label>
-                                                <textarea
-                                                    rows={3}
-                                                    value={leaveForm.reason}
-                                                    onChange={e => setLeaveForm(prev => ({ ...prev, reason: e.target.value }))}
-                                                    placeholder="Reason for leave application..."
-                                                    required
-                                                    className="w-full bg-white border border-[#121212]/10 rounded-xl p-3 text-xs font-sans outline-none resize-none focus:border-[#121212]/30"
-                                                />
-                                            </div>
-                                            <button type="submit" className="w-full bg-[#121212] text-white text-xs uppercase tracking-widest font-semibold py-2.5 rounded-xl transition-opacity hover:opacity-90">
-                                                Submit Leave Application
-                                            </button>
-                                        </form>
-                                    </div>
-                                )}
                             </div>
+                        </div>
+                    )}
 
-                            <div>
-                                <button
-                                    onClick={() => toggleSection('inventory_request')}
-                                    className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <PackagePlus size={16} className="text-[#8A817C]" />
-                                        <span className="text-sm font-normal">Inventory Request</span>
+                    {/* ── Personal hub ───────────────────────────────────── */}
+                    <div className="space-y-4">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
+                            Personal Hub
+                        </h4>
+
+                        <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
+                            <AccordionItem id="account_details" active={activeSection === "account_details"} onToggle={toggleSection} icon={User} label="Account Details">
+                                <div className="pt-3 text-xs text-gray-600 space-y-2 font-light">
+                                    <div className="grid grid-cols-2 gap-y-2">
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Full Name</p>
+                                            <p>{fullName}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Phone</p>
+                                            <p>{profile?.phoneNumber ?? "—"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Gender</p>
+                                            <p className="capitalize">{profile?.gender?.toLowerCase() ?? "—"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Marital Status</p>
+                                            <p className="capitalize">{profile?.maritalStatus?.toLowerCase() ?? "—"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Birthday</p>
+                                            <p>{formatBirthday(profile?.birthDay ?? null, profile?.birthMonth ?? null, profile?.birthYear ?? null)}</p>
+                                        </div>
+                                        {profile?.workerProfile && (
+                                            <div>
+                                                <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Profession</p>
+                                                <p>{profile.workerProfile.profession}</p>
+                                            </div>
+                                        )}
                                     </div>
-                                    {activeSection === 'inventory_request' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                                </button>
-
-                                {activeSection === 'inventory_request' && (
-                                    <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5">
-                                        <form onSubmit={handleInventorySubmit} className="space-y-3.5">
-                                            <div className="relative">
-                                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Select Inventory Item</label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setIsInventoryDropdownOpen(!isInventoryDropdownOpen)}
-                                                    className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2.5 text-xs text-left flex items-center justify-between outline-none"
-                                                >
-                                                    <span className={inventoryForm.inventory_id ? 'text-[#121212]' : 'text-gray-400'}>{selectedInventoryName}</span>
-                                                    <ChevronDown size={14} className="text-gray-400" />
-                                                </button>
-
-                                                {isInventoryDropdownOpen && (
-                                                    <div className="absolute z-20 w-full mt-1 bg-white border border-[#121212]/10 rounded-xl shadow-lg max-h-56 overflow-hidden flex flex-col">
-                                                        <div className="p-2 border-b border-[#121212]/5 flex items-center gap-2 bg-gray-50">
-                                                            <Search size={12} className="text-gray-400 shrink-0" />
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Search equipment..."
-                                                                value={searchQuery}
-                                                                onChange={e => setSearchQuery(e.target.value)}
-                                                                className="w-full bg-transparent text-xs outline-none font-sans"
-                                                            />
-                                                        </div>
-                                                        <div className="overflow-y-auto divide-y divide-[#121212]/5">
-                                                            {filteredInventory.length > 0 ? (
-                                                                filteredInventory.map(item => (
-                                                                    <button
-                                                                        key={item.id}
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            setInventoryForm(prev => ({ ...prev, inventory_id: item.id }));
-                                                                            setIsInventoryDropdownOpen(false);
-                                                                            setSearchQuery('');
-                                                                        }}
-                                                                        className="w-full text-left px-3 py-2.5 text-xs hover:bg-[#F9F9F9] transition-colors"
-                                                                    >
-                                                                        {item.name}
-                                                                    </button>
-                                                                ))
-                                                            ) : (
-                                                                <div className="p-3 text-xs text-gray-400 text-center">No items match criteria</div>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                    {profile?.workerProfile && (
+                                        <div className="pt-2 mt-2 border-t border-[#121212]/5 space-y-1">
+                                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Worker Info</p>
+                                            <p><span className="font-semibold text-[#121212]">Department:</span> {profile.workerProfile.department.name}</p>
+                                            {profile.workerProfile.secondaryDepartment && (
+                                                <p><span className="font-semibold text-[#121212]">Secondary Dept:</span> {profile.workerProfile.secondaryDepartment.name}</p>
+                                            )}
+                                            <p><span className="font-semibold text-[#121212]">Joined Workforce:</span> {profile.workerProfile.yearJoinedWorkforce}</p>
+                                            <div className="flex gap-2 mt-1.5 flex-wrap">
+                                                {profile.workerProfile.completedSOD && (
+                                                    <span className="px-2 py-0.5 bg-green-50 border border-green-100 text-green-700 text-[9px] font-bold uppercase tracking-wider rounded-full">SOD ✓</span>
+                                                )}
+                                                {profile.workerProfile.completedBibleCollege && (
+                                                    <span className="px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 text-[9px] font-bold uppercase tracking-wider rounded-full">Bible College ✓</span>
                                                 )}
                                             </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </AccordionItem>
 
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Quantity Requested</label>
-                                                <input
-                                                    type="number"
-                                                    min={1}
-                                                    value={inventoryForm.quantity_requested}
-                                                    onChange={e => setInventoryForm(prev => ({ ...prev, quantity_requested: parseInt(e.target.value) || 1 }))}
-                                                    required
-                                                    className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2 text-xs font-sans outline-none focus:border-[#121212]/30"
-                                                />
-                                            </div>
+                            <AccordionItem id="serving_rota" active={activeSection === "serving_rota"} onToggle={toggleSection} icon={Calendar} label="My Serving Rota">
+                                <div className="pt-3 text-xs text-gray-600 font-light">
+                                    <p>No upcoming rota assignments found.</p>
+                                </div>
+                            </AccordionItem>
 
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">From Date</label>
-                                                    <input
-                                                        type="date"
-                                                        value={inventoryForm.from_date}
-                                                        onChange={e => setInventoryForm(prev => ({ ...prev, from_date: e.target.value }))}
-                                                        required
-                                                        className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2 text-xs font-sans outline-none focus:border-[#121212]/30"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">To Date</label>
-                                                    <input
-                                                        type="date"
-                                                        value={inventoryForm.to_date}
-                                                        onChange={e => setInventoryForm(prev => ({ ...prev, to_date: e.target.value }))}
-                                                        required
-                                                        className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2 text-xs font-sans outline-none focus:border-[#121212]/30"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Reason for Ask</label>
-                                                <textarea
-                                                    rows={3}
-                                                    value={inventoryForm.reason}
-                                                    onChange={e => setInventoryForm(prev => ({ ...prev, reason: e.target.value }))}
-                                                    placeholder="State alternative context or usage parameters..."
-                                                    required
-                                                    className="w-full bg-white border border-[#121212]/10 rounded-xl p-3 text-xs font-sans outline-none resize-none focus:border-[#121212]/30"
-                                                />
-                                            </div>
-
-                                            <button type="submit" className="w-full bg-[#121212] text-white text-xs uppercase tracking-widest font-semibold py-2.5 rounded-xl transition-opacity hover:opacity-90">
-                                                Submit Allocation Claim
-                                            </button>
-                                        </form>
-                                    </div>
-                                )}
-                            </div>
+                            <AccordionItem id="tax_statements" active={activeSection === "tax_statements"} onToggle={toggleSection} icon={HeartHandshake} label="Tax Statements & Receipts">
+                                <div className="pt-3 text-xs text-gray-600 font-light">
+                                    <p>No financial records found for the active processing interval.</p>
+                                </div>
+                            </AccordionItem>
                         </div>
                     </div>
-                )}
 
-                <div className="space-y-4">
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
-                        Personal Hub
-                    </h4>
+                    {/* ── Preferences ────────────────────────────────────── */}
+                    <div className="space-y-4">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
+                            Preferences
+                        </h4>
 
-                    <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
-                        <div>
-                            <button
-                                onClick={() => toggleSection('account_details')}
-                                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <User size={16} className="text-[#8A817C]" />
-                                    <span className="text-sm font-normal">Account Details</span>
-                                </div>
-                                {activeSection === 'account_details' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                            </button>
-                            {activeSection === 'account_details' && (
-                                <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5 text-xs text-gray-600 space-y-1.5 font-light">
-                                    <p><strong>Legal Name:</strong> Sarah Jenkins</p>
-                                    <p><strong>Registered ID:</strong> CF-2024-8942</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <button
-                                onClick={() => toggleSection('serving_rota')}
-                                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Calendar size={16} className="text-[#8A817C]" />
-                                    <span className="text-sm font-normal">My Serving Rota</span>
-                                </div>
-                                {activeSection === 'serving_rota' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                            </button>
-                            {activeSection === 'serving_rota' && (
-                                <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5 text-xs text-gray-600 font-light">
-                                    <p>Upcoming Assignment: Technical Desk Production Team (Sunday Service: 08:00 AM)</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <button
-                                onClick={() => toggleSection('tax_statements')}
-                                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <HeartHandshake size={16} className="text-[#8A817C]" />
-                                    <span className="text-sm font-normal">Tax Statements & Receipts</span>
-                                </div>
-                                {activeSection === 'tax_statements' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                            </button>
-                            {activeSection === 'tax_statements' && (
-                                <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5 text-xs text-gray-600 font-light">
-                                    <p>No new financial records found for the active processing interval.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
-                        Preferences
-                    </h4>
-
-                    <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
-                        <div>
-                            <button
-                                onClick={() => toggleSection('notifications')}
-                                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Bell size={16} className="text-[#8A817C]" />
-                                    <span className="text-sm font-normal">Notifications</span>
-                                </div>
-                                {activeSection === 'notifications' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                            </button>
-                            {activeSection === 'notifications' && (
-                                <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5 text-xs text-gray-600 font-light">
+                        <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
+                            <AccordionItem id="notifications" active={activeSection === "notifications"} onToggle={toggleSection} icon={Bell} label="Notifications">
+                                <div className="pt-3 text-xs text-gray-600 font-light">
                                     <p>Push and email channel dispatch configurations are active.</p>
                                 </div>
-                            )}
-                        </div>
+                            </AccordionItem>
 
-                        <div>
-                            <button
-                                onClick={() => toggleSection('privacy')}
-                                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Shield size={16} className="text-[#8A817C]" />
-                                    <span className="text-sm font-normal">Privacy & Visibility</span>
+                            <AccordionItem id="privacy" active={activeSection === "privacy"} onToggle={toggleSection} icon={Shield} label="Privacy & Visibility">
+                                <div className="pt-3 text-xs text-gray-600 font-light">
+                                    <p>Profile scope is bounded to organisation system members.</p>
                                 </div>
-                                {activeSection === 'privacy' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                            </button>
-                            {activeSection === 'privacy' && (
-                                <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5 text-xs text-gray-600 font-light">
-                                    <p>Profile scope is bounded to organization system members.</p>
-                                </div>
-                            )}
-                        </div>
+                            </AccordionItem>
 
-                        <div>
-                            <button
-                                onClick={() => toggleSection('support')}
-                                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <CircleHelp size={16} className="text-[#8A817C]" />
-                                    <span className="text-sm font-normal">Support & Pastoral Care</span>
+                            <AccordionItem id="support" active={activeSection === "support"} onToggle={toggleSection} icon={CircleHelp} label="Support & Pastoral Care">
+                                <div className="pt-3 text-xs text-gray-600 font-light">
+                                    <p>Need guidance? Open an inquiry to dispatch an internal message.</p>
                                 </div>
-                                {activeSection === 'support' ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                            </button>
-                            {activeSection === 'support' && (
-                                <div className="p-4 bg-[#F9F9F9] border-t border-[#121212]/5 text-xs text-gray-600 font-light">
-                                    <p>Need guidance or looking to speak to someone? Open an inquiry to dispatch an internal message.</p>
-                                </div>
-                            )}
+                            </AccordionItem>
                         </div>
                     </div>
+
+                    {/* ── Logout ─────────────────────────────────────────── */}
+                    <div className="pt-2">
+                        <button
+                            onClick={logout}
+                            className="w-full bg-red-50 text-red-600 border border-red-100/50 text-xs uppercase tracking-widest font-semibold py-3.5 rounded-xl hover:bg-red-100/70 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                            <LogOut size={14} /> Log Out Account
+                        </button>
+                    </div>
                 </div>
-
-                <div className="pt-2">
-                    <button onClick={logout} className="w-full bg-red-50 text-red-600 border border-red-100/50 text-xs uppercase tracking-widest font-semibold py-3.5 rounded-xl hover:bg-red-100/70 transition-colors flex items-center justify-center gap-1.5 shadow-sm">
-                        <LogOut size={14} /> Log Out Account
-                    </button>
-                </div>
-
-            </div>
-
+            )}
         </div>
     );
 };

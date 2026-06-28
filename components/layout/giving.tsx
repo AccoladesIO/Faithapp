@@ -82,7 +82,7 @@ export const GivingPage = () => {
     return (
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
 
-            <div className="relative w-full h-[24vh] md:h-[28vh] overflow-hidden">
+            <div className="relative w-full h-[40vh] md:h-[45vh] overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1673042872287-a77ef03317a4?q=80&w=1108&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Giving backdrop"

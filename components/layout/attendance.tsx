@@ -162,7 +162,7 @@ export const PersonalAttendancePage = () => {
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
 
             {/* ── Hero banner ────────────────────────────────────────────── */}
-            <div className="relative w-full h-[24vh] md:h-[28vh] overflow-hidden">
+            <div className="relative w-full h-[40vh] md:h-[40vh] overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Sanctuary atmosphere"

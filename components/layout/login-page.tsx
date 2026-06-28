@@ -58,15 +58,17 @@ export const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFFFF] text-[#121212] flex flex-col justify-between pb-12 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
-            <div className="relative w-full h-[30vh] md:h-[35vh] overflow-hidden">
+        <div className="max-h-screen bg-[#FFFFFF] text-[#121212] flex flex-col justify-between pb-12 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
+            <div className="relative w-full h-[50vh] md:h-[55vh] overflow-hidden">
                 <img
-                    src="https://images.unsplash.com/photo-1445108771252-d1cc31a02a3c?q=80&w=1200&auto=format&fit=crop"
+                    src="https://images.unsplash.com/photo-1515162305285-0293e4767cc2?q=80&w=800&auto=format&fit=crop"
                     alt="Church sanctuary entrance"
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/40" />
-                <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-[#FFFFFF] via-[#FFFFFF]/20 to-transparent">
+                <div className="absolute inset-0 bg-gradient from-[#FFFFFF] via-transparent to-black/10" />
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to- to-transparent">
                     <span className="text-xs uppercase tracking-widest text-white/80 font-semibold drop-shadow-sm">
                         Welcome Back
                     </span>

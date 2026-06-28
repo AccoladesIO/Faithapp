@@ -199,7 +199,7 @@ export const EventsPage = () => {
             {/* ── Fixed left image panel ─────────────────────────────────── */}
             <div className="fixed top-0 left-0 w-full lg:w-[41.666667%] h-[40vh] lg:h-screen z-0 overflow-hidden">
                 <img
-                    src="https://images.unsplash.com/photo-1515162305285-0293e4767cc2?q=80&w=800&auto=format&fit=crop"
+                    src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=2073&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Church gathering banner"
                     className="w-full h-full object-cover"
                 />
