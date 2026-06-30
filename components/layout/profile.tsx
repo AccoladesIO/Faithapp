@@ -150,7 +150,7 @@ export const ProfilePage = () => {
                 <div className="px-6 mt-8 max-w-md mx-auto space-y-6">
 
                     {/* ── Spiritual giftings ─────────────────────────────── */}
-                    <div
+                    {/* <div
                         onClick={() => toggleSection("spiritual_giftings")}
                         className="bg-[#F4F1EA]/50 border border-[#121212]/5 rounded-2xl p-4 flex flex-col cursor-pointer transition-all hover:bg-[#EADCC9]/30"
                     >
@@ -174,7 +174,7 @@ export const ProfilePage = () => {
                                 <p>No gifting assessments recorded yet.</p>
                             </div>
                         )}
-                    </div>
+                    </div> */}
 
                     {/* ── Worker operations — only for WORKER role ──────── */}
                     {isWorker && (
