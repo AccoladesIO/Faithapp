@@ -78,9 +78,9 @@ function LeaveCard({
                     </div>
 
                     <div className="flex items-center gap-1.5 text-xs font-medium text-[#121212] mb-1">
-                        <span>{formatDate(record.startDate)}</span>
+                        <span>{formatDate(record.dateFrom)}</span>
                         <span className="text-gray-400">→</span>
-                        <span>{formatDate(record.endDate)}</span>
+                        <span>{formatDate(record.dateTo)}</span>
                     </div>
 
                     <p className="text-xs text-gray-500 font-light line-clamp-2">{record.reason}</p>

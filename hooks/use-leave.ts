@@ -10,8 +10,8 @@ export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED";
 export interface LeaveRecord {
     id: string;
     reason: string;
-    startDate: string;
-    endDate: string;
+    dateFrom: string;
+    dateTo: string;
     status: LeaveStatus;
     createdAt: string;
     worker: {

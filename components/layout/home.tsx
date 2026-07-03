@@ -2,15 +2,14 @@
 
 import React from "react";
 import {
-    Flame, Volume2, ArrowRight, MapPin, X,
+    Flame, Volume2, ArrowRight, MapPin, X, Baby,
     CheckCircle2, Loader2, CalendarX, RefreshCw, Clock,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEvents } from "@/hooks/use-events";
 import { useAnnouncements } from "@/hooks/use-announcements";
 import { useProfile } from "@/hooks/use-profile";
 import { formatLocalSlotTime, formatLocalTime } from "@/utils/parse-local-time";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatEventDate(isoDate: string): { day: string; month: string } {
     const d = new Date(isoDate + "T00:00:00");
@@ -27,8 +26,6 @@ function formatAnnouncementDate(isoDate: string): string {
     if (days === 1) return "Yesterday";
     return `${days} days ago`;
 }
-
-// ─── Skeletons ────────────────────────────────────────────────────────────────
 
 function HeroSkeleton() {
     return (
@@ -57,8 +54,6 @@ function FeedSkeleton() {
         </div>
     );
 }
-
-// ─── Check-in Modal ───────────────────────────────────────────────────────────
 
 interface CheckInModalProps {
     slotName: string;
@@ -169,9 +164,8 @@ function CheckInModal({
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export const HomePage = () => {
+    const router = useRouter();
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
     const {
@@ -199,7 +193,6 @@ export const HomePage = () => {
     return (
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
 
-            {/* ── Hero ─────────────────────────────────────────────────────── */}
             {eventsLoading ? (
                 <HeroSkeleton />
             ) : eventsError ? (
@@ -212,31 +205,38 @@ export const HomePage = () => {
                 </div>
             ) : heroEvent ? (
                 <div className="relative w-full h-[60vh] md:h-[65vh] overflow-hidden">
-                            <div className="absolute inset-0">
-                                <img
-                                    src="https://img.freepik.com/premium-photo/ultra-quality-picture-worship-concept-worship-praise-god-high-detail-8k_1257223-169575.jpg"
-                                    alt={`UPCOMING_EVENT.title`}
-                                    className="w-full h-full object-cover scale-105 transform transition duration-10000 ease-out"
-                                />
-                                <div className="absolute inset-0 bg-black/40" />
-                                <div className="absolute inset-0 bg-gradient from-[#FFFFFF] via-transparent to-black/10" />
-                            </div>
+                    <div className="absolute inset-0">
+                        <img
+                            src="https://img.freepik.com/premium-photo/ultra-quality-picture-worship-concept-worship-praise-god-high-detail-8k_1257223-169575.jpg"
+                            alt={`UPCOMING_EVENT.title`}
+                            className="w-full h-full object-cover scale-105 transform transition duration-10000 ease-out"
+                        />
+                        <div className="absolute inset-0 bg-black/40" />
+                        <div className="absolute inset-0 bg-gradient from-[#FFFFFF] via-transparent to-black/10" />
+                    </div>
 
-                    {/* Top bar */}
                     <div className="absolute top-0 inset-x-0 p-6 flex justify-between items-center bg-gradient-to-b from-black/40 to-transparent z-10">
                         <div>
                             <span className="text-xs uppercase tracking-widest text-white/70 font-semibold">RCCG DISCOVERY CENTER</span>
                             <h1 className="text-lg font-light tracking-tight text-white">Church</h1>
                         </div>
-                        {activeSlot && (
-                            <div className="flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full shadow-md">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                                <span className="text-[10px] uppercase font-bold tracking-widest text-white">Live Now</span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => router.push("/children-church")}
+                                className="p-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full transition-colors"
+                                aria-label="Children Church"
+                            >
+                                <Baby size={20} />
+                            </button>
+                            {activeSlot && (
+                                <div className="flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full shadow-md">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                    <span className="text-[10px] uppercase font-bold tracking-widest text-white">Live Now</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Bottom content */}
                     <div className="absolute bottom-0 inset-x-0 p-6 flex flex-col justify-end z-10">
                         <span className="text-[11px] uppercase tracking-widest text-[#EADCC9] font-bold mb-2 flex items-center gap-1.5">
                             {activeSlot
@@ -310,11 +310,9 @@ export const HomePage = () => {
                 </div>
             )}
 
-            {/* ── Announcements ─────────────────────────────────────────────── */}
             <div className="px-6 mt-10 space-y-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xs uppercase tracking-widest text-gray-500 font-semibold">Updates & Notices</h3>
-                    
                 </div>
 
                 {announcementsLoading ? (
@@ -347,7 +345,6 @@ export const HomePage = () => {
                 )}
             </div>
 
-            {/* ── Check-in Modal ────────────────────────────────────────────── */}
             {isModalOpen && activeSlot && heroEvent && (
                 <CheckInModal
                     slotName={activeSlot.name}

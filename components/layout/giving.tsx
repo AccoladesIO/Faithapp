@@ -531,7 +531,7 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
 
 export const GivingPage = () => {
     const { profile } = useProfile();
-    const isWorker = profile?.role === "WORKER";
+    const isWorker = profile?.isHod;
     const departmentId = profile?.workerProfile?.department?.id;
 
     const { accounts, history, proofs, isLoading, error } = useTithes();

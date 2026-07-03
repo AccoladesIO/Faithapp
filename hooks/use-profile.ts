@@ -35,6 +35,7 @@ export interface UserProfile {
     birthYear: number | null;
     changedPassword: boolean;
     workerProfile: WorkerProfile | null;
+    isHod: boolean;
 }
 
 export interface UseProfileReturn {
