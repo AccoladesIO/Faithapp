@@ -18,16 +18,17 @@ import { PushNotificationToggle } from "../ui/push-notification-toggle";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatBirthday(
-    day: number | null,
-    month: number | null,
-    year: number | null
+    day: number | null | undefined,
+    month: number | null | undefined,
+    year: number | null | undefined
 ): string {
     if (!day || !month || !year) return "—";
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return `${months[month - 1]} ${day}, ${year}`;
 }
 
-function formatMeetingDate(iso: string): string {
+function formatMeetingDate(iso?: string | null): string {
+    if (!iso) return "—";
     return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", {
         weekday: "short", day: "numeric", month: "short",
     });
@@ -40,11 +41,11 @@ const MONTH_NAMES = [
 
 // ─── Avatar initials ──────────────────────────────────────────────────────────
 
-function AvatarInitials({ name }: { name: string }) {
-    const parts = name.trim().split(" ");
+function AvatarInitials({ name }: { name?: string }) {
+    const parts = name?.trim()?.split(" ") ?? [];
     const initials =
         parts.length >= 2
-            ? `${parts[0][0]}${parts[parts.length - 1][0]}`
+            ? `${parts[0]?.[0] ?? ""}${parts[parts.length - 1]?.[0] ?? ""}`
             : parts[0]?.[0] ?? "?";
     return (
         <div className="w-24 h-24 rounded-full border-4 border-white bg-[#121212] flex items-center justify-center shadow-lg">
@@ -69,7 +70,7 @@ function AccordionItem({
     return (
         <div>
             <button
-                onClick={() => onToggle(id)}
+                onClick={() => onToggle?.(id)}
                 className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left"
             >
                 <div className="flex items-center gap-3">
@@ -96,7 +97,7 @@ const MAX_IMAGES = 5;
 const MAX_FILE_SIZE_MB = 5;
 const defaultForm = { title: "", description: "", location: "", isAnonymous: false };
 
-function IncidentReportForm({ onSuccess }: { onSuccess: () => void }) {
+function IncidentReportForm({ onSuccess }: { onSuccess?: () => void }) {
     const { isSubmitting, submitError, submitIncident } = useIncidents();
     const [form, setForm] = useState(defaultForm);
     const [images, setImages] = useState<File[]>([]);
@@ -104,26 +105,26 @@ function IncidentReportForm({ onSuccess }: { onSuccess: () => void }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selected = Array.from(e.target.files ?? []);
+        const selected = Array.from(e.target?.files ?? []);
         setSizeError(null);
-        const oversized = selected.filter((f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+        const oversized = selected.filter((f) => (f?.size ?? 0) > MAX_FILE_SIZE_MB * 1024 * 1024);
         if (oversized.length > 0) {
             setSizeError(
-                `${oversized.map((f) => f.name).join(", ")} exceed${oversized.length === 1 ? "s" : ""} the 5 MB limit.`
+                `${oversized.map((f) => f?.name).join(", ")} exceed${oversized.length === 1 ? "s" : ""} the 5 MB limit.`
             );
             return;
         }
-        setImages((prev) => [...prev, ...selected].slice(0, MAX_IMAGES));
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        setImages((prev) => [...(prev ?? []), ...selected].slice(0, MAX_IMAGES));
+        if (fileInputRef?.current) fileInputRef.current.value = "";
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await submitIncident({ ...form, images });
+            await submitIncident?.({ ...form, images });
             setForm(defaultForm);
             setImages([]);
-            onSuccess();
+            onSuccess?.();
         } catch { /* submitError shown in UI */ }
     };
 
@@ -132,45 +133,45 @@ function IncidentReportForm({ onSuccess }: { onSuccess: () => void }) {
             <div>
                 <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Incident Title</label>
                 <input type="text" required placeholder="Broken equipment in hall B"
-                    value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                    value={form?.title ?? ""} onChange={(e) => setForm((p) => ({ ...p, title: e.target?.value ?? "" }))}
                     className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2.5 text-xs font-sans outline-none focus:border-[#121212]/30" />
             </div>
             <div>
                 <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Description</label>
                 <textarea required rows={3} placeholder="Describe what happened in detail…"
-                    value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                    value={form?.description ?? ""} onChange={(e) => setForm((p) => ({ ...p, description: e.target?.value ?? "" }))}
                     className="w-full bg-white border border-[#121212]/10 rounded-xl p-3 text-xs font-sans outline-none resize-none focus:border-[#121212]/30" />
             </div>
             <div>
                 <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Location</label>
                 <input type="text" required placeholder="Hall B, Main Auditorium…"
-                    value={form.location} onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
+                    value={form?.location ?? ""} onChange={(e) => setForm((p) => ({ ...p, location: e.target?.value ?? "" }))}
                     className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2.5 text-xs font-sans outline-none focus:border-[#121212]/30" />
             </div>
             <div>
                 <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
                     Images (Optional — up to {MAX_IMAGES}, max 5 MB each)
                 </label>
-                {images.length < MAX_IMAGES && (
+                {(images?.length ?? 0) < MAX_IMAGES && (
                     <label className="flex items-center gap-2 w-full bg-white border border-dashed border-[#121212]/15 rounded-xl px-3 py-3 text-xs cursor-pointer hover:border-[#121212]/30 transition-colors">
                         <ImageIcon size={14} className="text-[#8A817C] flex-shrink-0" />
                         <span className="text-gray-400">
-                            {images.length === 0 ? "Add photos of the incident…" : `Add more (${images.length}/${MAX_IMAGES} selected)`}
+                            {(images?.length ?? 0) === 0 ? "Add photos of the incident…" : `Add more (${images?.length ?? 0}/${MAX_IMAGES} selected)`}
                         </span>
                         <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
                     </label>
                 )}
                 {sizeError && <p className="text-xs text-red-500 mt-1">{sizeError}</p>}
-                {images.length > 0 && (
+                {(images?.length ?? 0) > 0 && (
                     <div className="mt-2 space-y-1.5">
-                        {images.map((img, i) => (
+                        {images?.map((img, i) => (
                             <div key={i} className="flex items-center justify-between bg-white border border-[#121212]/5 rounded-lg px-3 py-2">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <FileText size={12} className="text-[#8A817C] flex-shrink-0" />
-                                    <span className="text-xs text-gray-600 truncate">{img.name}</span>
-                                    <span className="text-[10px] text-gray-400 flex-shrink-0">{(img.size / 1024 / 1024).toFixed(1)} MB</span>
+                                    <span className="text-xs text-gray-600 truncate">{img?.name}</span>
+                                    <span className="text-[10px] text-gray-400 flex-shrink-0">{((img?.size ?? 0) / 1024 / 1024).toFixed(1)} MB</span>
                                 </div>
-                                <button type="button" onClick={() => setImages((p) => p.filter((_, j) => j !== i))}
+                                <button type="button" onClick={() => setImages((p) => p?.filter((_, j) => j !== i) ?? [])}
                                     className="p-1 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0">
                                     <X size={12} />
                                 </button>
@@ -185,9 +186,9 @@ function IncidentReportForm({ onSuccess }: { onSuccess: () => void }) {
                     <p className="text-[10px] text-gray-400 font-light mt-0.5">Your name will not be attached to this report.</p>
                 </div>
                 <button type="button"
-                    onClick={() => setForm((p) => ({ ...p, isAnonymous: !p.isAnonymous }))}
-                    className={`w-10 h-6 flex items-center rounded-full p-0.5 transition-colors duration-200 focus:outline-none flex-shrink-0 ml-3 ${form.isAnonymous ? "bg-[#8A817C]" : "bg-gray-300"}`}>
-                    <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-200 ${form.isAnonymous ? "translate-x-4" : "translate-x-0"}`} />
+                    onClick={() => setForm((p) => ({ ...p, isAnonymous: !p?.isAnonymous }))}
+                    className={`w-10 h-6 flex items-center rounded-full p-0.5 transition-colors duration-200 focus:outline-none flex-shrink-0 ml-3 ${form?.isAnonymous ? "bg-[#8A817C]" : "bg-gray-300"}`}>
+                    <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-200 ${form?.isAnonymous ? "translate-x-4" : "translate-x-0"}`} />
                 </button>
             </div>
             {submitError && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{submitError}</p>}
@@ -204,29 +205,29 @@ function IncidentReportForm({ onSuccess }: { onSuccess: () => void }) {
 function MeetingCard({
     meeting, onSelect, isSelecting, isSelected,
 }: {
-    meeting: PrayerMeeting;
+    meeting?: PrayerMeeting;
     onSelect: (id: string) => void;
-    isSelecting: boolean;
-    isSelected: boolean;
+    isSelecting?: boolean;
+    isSelected?: boolean;
 }) {
-    const { dayConfig } = meeting;
-    const isFull = meeting.currentCapacity >= dayConfig.maxCapacity;
+    const dayConfig = meeting?.dayConfig;
+    const isFull = (meeting?.currentCapacity ?? 0) >= (dayConfig?.maxCapacity ?? 0);
     return (
         <div className={`bg-white border rounded-xl p-3.5 transition-all ${isSelected ? "border-[#121212] bg-[#F4F1EA]/30" : "border-[#121212]/5"}`}>
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                        <span className="text-xs font-medium text-[#121212]">{formatMeetingDate(meeting.date)}</span>
+                        <span className="text-xs font-medium text-[#121212]">{formatMeetingDate(meeting?.date)}</span>
                         {isFull && <span className="text-[8px] uppercase tracking-wider font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Full</span>}
-                        {meeting.selectionStatus === "OPEN" && !isFull && <span className="text-[8px] uppercase tracking-wider font-bold bg-green-50 text-green-700 px-1.5 py-0.5 rounded">Open</span>}
+                        {meeting?.selectionStatus === "OPEN" && !isFull && <span className="text-[8px] uppercase tracking-wider font-bold bg-green-50 text-green-700 px-1.5 py-0.5 rounded">Open</span>}
                     </div>
                     <div className="flex items-center gap-3 text-[10px] text-gray-400 font-light">
-                        <span className="flex items-center gap-1"><Clock size={10} /> {dayConfig.startTime} – {dayConfig.endTime}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} /> {dayConfig?.startTime} – {dayConfig?.endTime}</span>
                         <span className="flex items-center gap-1">
-                            {dayConfig.mode === "PHYSICAL" ? <MapPin size={10} /> : <Wifi size={10} />}
-                            {dayConfig.mode === "PHYSICAL" ? "In-person" : "Online"}
+                            {dayConfig?.mode === "PHYSICAL" ? <MapPin size={10} /> : <Wifi size={10} />}
+                            {dayConfig?.mode === "PHYSICAL" ? "In-person" : "Online"}
                         </span>
-                        <span>{meeting.currentCapacity}/{dayConfig.maxCapacity}</span>
+                        <span>{meeting?.currentCapacity ?? 0}/{dayConfig?.maxCapacity ?? 0}</span>
                     </div>
                 </div>
                 {isSelected ? (
@@ -234,8 +235,8 @@ function MeetingCard({
                         <CheckCircle2 size={13} /> Selected
                     </div>
                 ) : (
-                    <button type="button" onClick={() => onSelect(meeting.id)}
-                        disabled={isSelecting || isFull || meeting.selectionStatus !== "OPEN"}
+                    <button type="button" onClick={() => meeting?.id && onSelect?.(meeting.id)}
+                        disabled={isSelecting || isFull || meeting?.selectionStatus !== "OPEN"}
                         className="text-[10px] uppercase tracking-wider font-bold text-[#121212] border border-[#121212]/20 px-3 py-1.5 rounded-lg hover:bg-[#F4F1EA] transition-colors disabled:opacity-40 flex-shrink-0">
                         {isSelecting ? <Loader2 size={11} className="animate-spin" /> : "Select"}
                     </button>
@@ -245,21 +246,21 @@ function MeetingCard({
     );
 }
 
-function RosterCard({ entry }: { entry: RosterEntry }) {
-    const { meeting } = entry;
+function RosterCard({ entry }: { entry?: RosterEntry }) {
+    const meeting = entry?.meeting;
     return (
         <div className="bg-white border border-[#121212]/5 rounded-xl p-3.5">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-xs font-medium text-[#121212]">{formatMeetingDate(meeting.date)}</p>
+                    <p className="text-xs font-medium text-[#121212]">{formatMeetingDate(meeting?.date)}</p>
                     <p className="text-[10px] text-gray-400 font-light mt-0.5">
-                        {meeting.dayConfig.startTime} – {meeting.dayConfig.endTime} · {meeting.dayConfig.mode === "PHYSICAL" ? "In-person" : "Online"}
+                        {meeting?.dayConfig?.startTime} – {meeting?.dayConfig?.endTime} · {meeting?.dayConfig?.mode === "PHYSICAL" ? "In-person" : "Online"}
                     </p>
                 </div>
-                <span className={`text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${entry.status === "SCHEDULED" ? "bg-amber-50 text-amber-700" :
-                        entry.status === "COMPLETED" ? "bg-green-50 text-green-700" :
-                            "bg-gray-100 text-gray-500"
-                    }`}>{entry.status}</span>
+                <span className={`text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${entry?.status === "SCHEDULED" ? "bg-amber-50 text-amber-700" :
+                    entry?.status === "COMPLETED" ? "bg-green-50 text-green-700" :
+                        "bg-gray-100 text-gray-500"
+                    }`}>{entry?.status}</span>
             </div>
         </div>
     );
@@ -273,22 +274,22 @@ function PrayerSection() {
         programsError, meetingsError, selectError,
         selectedMonth, selectedYear, setSelectedMonth, setSelectedYear,
         selectMeeting,
-    } = usePrayer();
+    } = usePrayer() ?? {};
 
     const [view, setView] = useState<"roster" | "select">("roster");
     const now = new Date();
     const canGoBack = !(selectedMonth === now.getMonth() + 1 && selectedYear === now.getFullYear());
 
     const handlePrevMonth = () => {
-        if (selectedMonth === 1) { setSelectedMonth(12); setSelectedYear(selectedYear - 1); }
-        else setSelectedMonth(selectedMonth - 1);
+        if (selectedMonth === 1) { setSelectedMonth?.(12); setSelectedYear?.((selectedYear ?? now.getFullYear()) - 1); }
+        else setSelectedMonth?.((selectedMonth ?? 1) - 1);
     };
     const handleNextMonth = () => {
-        if (selectedMonth === 12) { setSelectedMonth(1); setSelectedYear(selectedYear + 1); }
-        else setSelectedMonth(selectedMonth + 1);
+        if (selectedMonth === 12) { setSelectedMonth?.(1); setSelectedYear?.((selectedYear ?? now.getFullYear()) + 1); }
+        else setSelectedMonth?.((selectedMonth ?? 1) + 1);
     };
 
-    const selectedMeetingIds = new Set((prayerStatus?.mySelections ?? []).map((m) => m.id));
+    const selectedMeetingIds = new Set((prayerStatus?.mySelections ?? []).map((m) => m?.id));
 
     if (isLoadingPrograms) return (
         <div className="pt-3 space-y-2 animate-pulse">
@@ -298,15 +299,15 @@ function PrayerSection() {
     );
 
     if (programsError) return <p className="pt-3 text-xs text-red-500">{programsError}</p>;
-    if (programs.length === 0) return <p className="pt-3 text-xs text-gray-400 font-light">No prayer programmes available.</p>;
+    if ((programs?.length ?? 0) === 0) return <p className="pt-3 text-xs text-gray-400 font-light">No prayer programmes available.</p>;
 
     return (
         <div className="pt-3 space-y-4">
             <div>
                 <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Programme</label>
-                <select value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value)}
+                <select value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId?.(e.target?.value)}
                     className="w-full bg-white border border-[#121212]/10 rounded-xl px-3 py-2.5 text-xs font-sans outline-none focus:border-[#121212]/30 appearance-none">
-                    {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    {programs?.map((p) => <option key={p?.id} value={p?.id}>{p?.name}</option>)}
                 </select>
             </div>
             <div className="flex items-center justify-between bg-white border border-[#121212]/5 rounded-xl px-4 py-2.5">
@@ -314,15 +315,15 @@ function PrayerSection() {
                     className="p-1 text-[#8A817C] hover:text-[#121212] transition-colors disabled:opacity-30">
                     <ChevronLeft size={14} />
                 </button>
-                <span className="text-xs font-semibold text-[#121212]">{MONTH_NAMES[selectedMonth - 1]} {selectedYear}</span>
+                <span className="text-xs font-semibold text-[#121212]">{MONTH_NAMES[(selectedMonth ?? 1) - 1]} {selectedYear}</span>
                 <button type="button" onClick={handleNextMonth} className="p-1 text-[#8A817C] hover:text-[#121212] transition-colors">
                     <ChevronRight size={14} />
                 </button>
             </div>
             {prayerStatus && (
-                <div className={`text-xs px-3 py-2.5 rounded-xl border font-light ${prayerStatus.windowOpen ? "bg-green-50 border-green-100 text-green-700" : "bg-gray-50 border-gray-100 text-gray-500"}`}>
-                    {prayerStatus.windowOpen
-                        ? prayerStatus.hasSelected
+                <div className={`text-xs px-3 py-2.5 rounded-xl border font-light ${prayerStatus?.windowOpen ? "bg-green-50 border-green-100 text-green-700" : "bg-gray-50 border-gray-100 text-gray-500"}`}>
+                    {prayerStatus?.windowOpen
+                        ? prayerStatus?.hasSelected
                             ? "✓ You've already selected your prayer slot this month."
                             : "Selection window is open — pick a meeting below."
                         : "Selection window is closed for this period."}
@@ -331,11 +332,11 @@ function PrayerSection() {
             <div className="flex bg-[#F4F1EA] p-0.5 rounded-xl">
                 <button onClick={() => setView("roster")}
                     className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors ${view === "roster" ? "bg-white text-[#121212] shadow-sm" : "text-[#8A817C]"}`}>
-                    My Roster {myRoster.length > 0 && `(${myRoster.length})`}
+                    My Roster {(myRoster?.length ?? 0) > 0 && `(${myRoster?.length})`}
                 </button>
                 <button onClick={() => setView("select")}
                     className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors ${view === "select" ? "bg-white text-[#121212] shadow-sm" : "text-[#8A817C]"}`}>
-                    Available {availableMeetings.length > 0 && `(${availableMeetings.length})`}
+                    Available {(availableMeetings?.length ?? 0) > 0 && `(${availableMeetings?.length})`}
                 </button>
             </div>
             {selectError && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{selectError}</p>}
@@ -344,14 +345,14 @@ function PrayerSection() {
             ) : meetingsError ? (
                 <p className="text-xs text-red-500">{meetingsError}</p>
             ) : view === "roster" ? (
-                myRoster.length === 0
-                    ? <p className="text-xs text-gray-400 font-light text-center py-4">No roster entries for {MONTH_NAMES[selectedMonth - 1]}.</p>
-                    : <div className="space-y-2">{myRoster.map((e) => <RosterCard key={e.id} entry={e} />)}</div>
+                (myRoster?.length ?? 0) === 0
+                    ? <p className="text-xs text-gray-400 font-light text-center py-4">No roster entries for {MONTH_NAMES[(selectedMonth ?? 1) - 1]}.</p>
+                    : <div className="space-y-2">{myRoster?.map((e) => <RosterCard key={e?.id} entry={e} />)}</div>
             ) : (
-                availableMeetings.length === 0
-                    ? <p className="text-xs text-gray-400 font-light text-center py-4">No available meetings for {MONTH_NAMES[selectedMonth - 1]}.</p>
-                    : <div className="space-y-2">{availableMeetings.map((m) => (
-                        <MeetingCard key={m.id} meeting={m} onSelect={selectMeeting} isSelecting={isSelecting} isSelected={selectedMeetingIds.has(m.id)} />
+                (availableMeetings?.length ?? 0) === 0
+                    ? <p className="text-xs text-gray-400 font-light text-center py-4">No available meetings for {MONTH_NAMES[(selectedMonth ?? 1) - 1]}.</p>
+                    : <div className="space-y-2">{availableMeetings?.map((m) => (
+                        <MeetingCard key={m?.id} meeting={m} onSelect={selectMeeting} isSelecting={isSelecting} isSelected={selectedMeetingIds?.has(m?.id)} />
                     ))}</div>
             )}
         </div>
@@ -376,8 +377,8 @@ function ProfileSkeleton() {
 export const ProfilePage = () => {
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const [incidentSuccess, setIncidentSuccess] = useState(false);
-    const { logout } = useAuth();
-    const { profile, isLoading } = useProfile();
+    const { logout } = useAuth() ?? {};
+    const { profile, isLoading } = useProfile() ?? {};
     const router = useRouter();
 
     const toggleSection = (id: string) => {
@@ -391,7 +392,7 @@ export const ProfilePage = () => {
         setTimeout(() => setIncidentSuccess(false), 4000);
     };
 
-    const fullName = profile ? `${profile.firstname} ${profile.lastname}` : "";
+    const fullName = profile ? `${profile?.firstname ?? ""} ${profile?.lastname ?? ""}` : "";
     const isWorker = profile?.role === "WORKER";
 
     return (
@@ -413,8 +414,8 @@ export const ProfilePage = () => {
                 </p>
                 {!isLoading && profile && (
                     <div className="flex items-center gap-2 mt-3">
-                        <span className="text-[9px] uppercase tracking-wider font-bold bg-[#121212] text-white px-2.5 py-0.5 rounded-full shadow-sm">{profile.role}</span>
-                        {profile.workerProfile && <span className="text-[10px] text-gray-400 font-light">{profile.workerProfile.department.name}</span>}
+                        <span className="text-[9px] uppercase tracking-wider font-bold bg-[#121212] text-white px-2.5 py-0.5 rounded-full shadow-sm">{profile?.role}</span>
+                        {profile?.workerProfile && <span className="text-[10px] text-gray-400 font-light">{profile?.workerProfile?.department?.name}</span>}
                     </div>
                 )}
             </div>
@@ -431,7 +432,7 @@ export const ProfilePage = () => {
                         <div className="space-y-4">
                             <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">Worker Operations</h4>
                             <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
-                                <button onClick={() => router.push("/leave")}
+                                <button onClick={() => router?.push("/leave")}
                                     className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left">
                                     <div className="flex items-center gap-3">
                                         <ClipboardList size={16} className="text-[#8A817C]" />
@@ -458,17 +459,17 @@ export const ProfilePage = () => {
                                         <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Gender</p><p className="capitalize">{profile?.gender?.toLowerCase() ?? "—"}</p></div>
                                         <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Marital Status</p><p className="capitalize">{profile?.maritalStatus?.toLowerCase() ?? "—"}</p></div>
                                         <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Birthday</p><p>{formatBirthday(profile?.birthDay ?? null, profile?.birthMonth ?? null, profile?.birthYear ?? null)}</p></div>
-                                        {profile?.workerProfile && <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Profession</p><p>{profile.workerProfile.profession}</p></div>}
+                                        {profile?.workerProfile && <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Profession</p><p>{profile?.workerProfile?.profession}</p></div>}
                                     </div>
                                     {profile?.workerProfile && (
                                         <div className="pt-2 mt-2 border-t border-[#121212]/5 space-y-1">
                                             <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Worker Info</p>
-                                            <p><span className="font-semibold text-[#121212]">Department:</span> {profile.workerProfile.department.name}</p>
-                                            {profile.workerProfile.secondaryDepartment && <p><span className="font-semibold text-[#121212]">Secondary:</span> {profile.workerProfile.secondaryDepartment.name}</p>}
-                                            <p><span className="font-semibold text-[#121212]">Joined:</span> {profile.workerProfile.yearJoinedWorkforce}</p>
+                                            <p><span className="font-semibold text-[#121212]">Department:</span> {profile?.workerProfile?.department?.name}</p>
+                                            {profile?.workerProfile?.secondaryDepartment && <p><span className="font-semibold text-[#121212]">Secondary:</span> {profile?.workerProfile?.secondaryDepartment?.name}</p>}
+                                            <p><span className="font-semibold text-[#121212]">Joined:</span> {profile?.workerProfile?.yearJoinedWorkforce}</p>
                                             <div className="flex gap-2 mt-1.5 flex-wrap">
-                                                {profile.workerProfile.completedSOD && <span className="px-2 py-0.5 bg-green-50 border border-green-100 text-green-700 text-[9px] font-bold uppercase tracking-wider rounded-full">SOD ✓</span>}
-                                                {profile.workerProfile.completedBibleCollege && <span className="px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 text-[9px] font-bold uppercase tracking-wider rounded-full">Bible College ✓</span>}
+                                                {profile?.workerProfile?.completedSOD && <span className="px-2 py-0.5 bg-green-50 border border-green-100 text-green-700 text-[9px] font-bold uppercase tracking-wider rounded-full">SOD ✓</span>}
+                                                {profile?.workerProfile?.completedBibleCollege && <span className="px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 text-[9px] font-bold uppercase tracking-wider rounded-full">Bible College ✓</span>}
                                             </div>
                                         </div>
                                     )}
@@ -512,7 +513,7 @@ export const ProfilePage = () => {
                     </div>
 
                     <div className="pt-2">
-                        <button onClick={logout}
+                        <button onClick={() => logout?.()}
                             className="w-full bg-red-50 text-red-600 border border-red-100/50 text-xs uppercase tracking-widest font-semibold py-3.5 rounded-xl hover:bg-red-100/70 transition-colors flex items-center justify-center gap-1.5 shadow-sm">
                             <LogOut size={14} /> Log Out Account
                         </button>
