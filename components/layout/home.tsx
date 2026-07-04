@@ -334,7 +334,10 @@ export const HomePage = () => {
                                     </span>
                                 </div>
                                 <h4 className="text-lg font-normal tracking-tight text-[#121212] mb-2 leading-snug">{item.title}</h4>
-                                <p className="text-sm text-gray-600 font-light line-clamp-2 leading-relaxed mb-4">{item.body}</p>
+                                <div
+                                    className="text-sm text-gray-600 font-light line-clamp-2 leading-relaxed mb-4"
+                                    dangerouslySetInnerHTML={{ __html: item.body }}
+                                />
                                 <div className="flex items-center justify-between pt-1 border-t border-[#121212]/5">
                                     <span className="text-xs text-gray-400 font-light">Official Notice</span>
                                     <button className="text-xs font-semibold text-[#121212] hover:text-gray-600 transition-colors">View Details</button>

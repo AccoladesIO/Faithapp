@@ -544,14 +544,14 @@ export const GivingPage = () => {
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
 
             {/* ── Hero ─────────────────────────────────────────────────── */}
-            <div className="relative w-full h-[28vh] md:h-[32vh] overflow-hidden">
+            <div className="relative w-full h-[40vh] overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1673042872287-a77ef03317a4?q=80&w=1108&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Giving backdrop"
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9]/40 to-transparent">
+                <div className="absolute bottom-0 inset-x-0 p-6 b">
                     <span className="text-xs uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1 drop-shadow-sm">
                         <HeartHandshake size={12} /> Stewardship
                     </span>

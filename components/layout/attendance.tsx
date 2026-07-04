@@ -169,7 +169,7 @@ export const PersonalAttendancePage = () => {
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/40" />
-                <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9]/40 to-transparent">
+                <div className="absolute bottom-0 inset-x-0 p-6 ">
                     <span className="text-xs uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1 drop-shadow-sm">
                         <CalendarIcon size={12} /> My Profile
                     </span>
