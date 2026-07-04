@@ -213,7 +213,7 @@ export const EventsPage = () => {
                 <div className="lg:col-span-7 bg-[#FFF] pt-6 lg:pt-12 pointer-events-auto">
 
                     {/* ── Hero content ──────────────────────────────────── */}
-                    <div className="p-6 lg:px-12 flex flex-col justify-between min-h-[45vh] lg:min-h-[55vh]">
+                    <div className="p-6 lg:px-12 flex flex-col justify-between gap-4 lg:min-h-[55vh]">
                         <div className="flex justify-between items-start">
                             <div>
                                 <span className="text-xs uppercase tracking-widest text-[#8A817C] font-semibold">
@@ -225,7 +225,7 @@ export const EventsPage = () => {
                             </div>
                         </div>
 
-                        <div className="mt-8 lg:mt-0 max-w-xl">
+                        <div className=" lg:mt-0 max-w-xl">
                             <h2 className="text-4xl lg:text-5xl font-light tracking-tight leading-tight text-[#121212]">
                                 Take a{" "}
                                 <span className="text-[#8A817C] font-normal">step</span>{" "}

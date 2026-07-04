@@ -215,7 +215,7 @@ export const PersonalAttendancePage = () => {
             <div className="px-6 mt-8 space-y-4">
                 <div className="flex justify-between items-center px-1">
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-                        All Programs
+                        Check-in History
                     </span>
                     {stats.lastCheckedInDate && !isLoading && (
                         <span className="text-xs text-gray-400 font-light">

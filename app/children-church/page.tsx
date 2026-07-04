@@ -7,7 +7,7 @@ import { ChildrenChurchPage } from '@/components/layout/children-church';
 
 const page = () => {
   return (
-    <Shell activeTab="home" >
+    <Shell activeTab="children-church" >
         <ChildrenChurchPage />
     </Shell>
   )

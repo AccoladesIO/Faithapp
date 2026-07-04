@@ -7,7 +7,7 @@ import { withAuth } from '@/utils/auth/with-auth';
 
 const page = () => {
   return (
-    <Shell activeTab="giving" >
+    <Shell activeTab="profile" >
       <GivingPage />
     </Shell>
   )

@@ -5,10 +5,13 @@ import {
     HeartHandshake, ShieldCheck, CheckCircle2, AlertCircle, Loader2,
     Landmark, History, Copy, Check, Upload, FileText, Download,
     Briefcase, X, Building2, ChevronDown,
+    ArrowLeft,
 } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
 import { useTithes, ProofStatus } from "@/hooks/use-tithes";
 import { useFinanceRequests, FinanceRequestStatus } from "@/hooks/use-finance-requests";
+import { useRouter } from "next/navigation";
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -533,6 +536,7 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
 
 export const GivingPage = () => {
     const { profile } = useProfile();
+    const router = useRouter();
     const isWorker = profile?.isHod;
     const departmentId = profile?.workerProfile?.department?.id;
 
@@ -553,6 +557,15 @@ export const GivingPage = () => {
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute top-4 left-4 z-10">
+                    <button
+                        onClick={() => router.push("/")}
+                        className="p-2.5 bg-black/25 backdrop-blur-md hover:bg-black/40 text-white rounded-full transition-colors border border-white/10"
+                        aria-label="Back to home"
+                    >
+                        <ArrowLeft size={16} />
+                    </button>
+                </div>
                 <div className="absolute bottom-0 inset-x-0 p-6 b">
                     <span className="text-xs uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1 drop-shadow-sm">
                         <HeartHandshake size={12} /> Stewardship

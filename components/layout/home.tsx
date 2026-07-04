@@ -221,13 +221,13 @@ export const HomePage = () => {
                             <h1 className="text-lg font-light tracking-tight text-white">Church</h1>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
+                            {/* <button
                                 onClick={() => router.push("/children-church")}
                                 className="p-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full transition-colors"
                                 aria-label="Children Church"
                             >
                                 <Baby size={20} />
-                            </button>
+                            </button> */}
                             {activeSlot && (
                                 <div className="flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full shadow-md">
                                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />

@@ -446,6 +446,22 @@ export const ProfilePage = () => {
                             </div>
                         </div>
                     )}
+                    <div className="space-y-4">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">Member Operations</h4>
+                        <div className="bg-white border border-[#121212]/5 rounded-2xl divide-y divide-[#121212]/5 shadow-sm overflow-hidden">
+                            <button onClick={() => router?.push("/giving")}
+                                className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left">
+                                <div className="flex items-center gap-3">
+                                    <ClipboardList size={16} className="text-[#8A817C]" />
+                                    <div>
+                                        <span className="text-sm font-normal block">Giving</span>
+                                        <span className="text-[10px] text-gray-400 font-light">Manage your tithes and offerings</span>
+                                    </div>
+                                </div>
+                                <ChevronRight size={14} className="text-gray-400" />
+                            </button>
+                        </div>
+                    </div>
 
                     <div className="space-y-4">
                         <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">Personal Hub</h4>
