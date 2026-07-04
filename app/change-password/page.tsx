@@ -77,7 +77,7 @@ function PasswordField({
 
 type Status = "idle" | "processing" | "success" | "error";
 
-export const ChangePasswordPage = () => {
+export default function ChangePasswordPage() {
     const router = useRouter();
 
     const [oldPassword, setOld] = useState("");
