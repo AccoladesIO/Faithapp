@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Calendar, CheckSquare, HeartHandshake, UserCircle, Baby } from 'lucide-react';
+import { Home, Calendar, CheckSquare, UserCircle, Baby } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type UserRole = 'MEMBER' | 'WORKER' | null;

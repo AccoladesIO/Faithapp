@@ -452,7 +452,7 @@ export const ProfilePage = () => {
                             <button onClick={() => router?.push("/giving")}
                                 className="w-full flex items-center justify-between p-4 hover:bg-[#F9F9F9] transition-colors text-left">
                                 <div className="flex items-center gap-3">
-                                    <ClipboardList size={16} className="text-[#8A817C]" />
+                                    <HeartHandshake size={16} className="text-[#8A817C]" />
                                     <div>
                                         <span className="text-sm font-normal block">Giving</span>
                                         <span className="text-[10px] text-gray-400 font-light">Manage your tithes and offerings</span>
