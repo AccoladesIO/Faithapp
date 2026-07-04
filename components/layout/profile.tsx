@@ -476,13 +476,13 @@ export const ProfilePage = () => {
                                 </div>
                             </AccordionItem>
 
-                            <AccordionItem id="serving_rota" active={activeSection === "serving_rota"} onToggle={toggleSection} icon={Calendar} label="My Serving Rota">
+                            {/* <AccordionItem id="serving_rota" active={activeSection === "serving_rota"} onToggle={toggleSection} icon={Calendar} label="My Serving Rota">
                                 <div className="pt-3 text-xs text-gray-600 font-light"><p>No upcoming rota assignments found.</p></div>
                             </AccordionItem>
 
                             <AccordionItem id="tax_statements" active={activeSection === "tax_statements"} onToggle={toggleSection} icon={HeartHandshake} label="Tax Statements & Receipts">
                                 <div className="pt-3 text-xs text-gray-600 font-light"><p>No financial records found for the active processing interval.</p></div>
-                            </AccordionItem>
+                            </AccordionItem> */}
 
                             {isWorker && (
                                 <AccordionItem id="prayer" active={activeSection === "prayer"} onToggle={toggleSection} icon={HandMetal} label="Prayer Roster"
@@ -503,9 +503,9 @@ export const ProfilePage = () => {
                             <AccordionItem id="notifications" active={activeSection === "notifications"} onToggle={toggleSection} icon={Bell} label="Notifications">
                                 <PushNotificationToggle />
                             </AccordionItem>
-                            <AccordionItem id="privacy" active={activeSection === "privacy"} onToggle={toggleSection} icon={Shield} label="Privacy & Visibility">
+                            {/* <AccordionItem id="privacy" active={activeSection === "privacy"} onToggle={toggleSection} icon={Shield} label="Privacy & Visibility">
                                 <div className="pt-3 text-xs text-gray-600 font-light"><p>Profile scope is bounded to organisation system members.</p></div>
-                            </AccordionItem>
+                            </AccordionItem> */}
                             <AccordionItem id="support" active={activeSection === "support"} onToggle={toggleSection} icon={CircleHelp} label="Support & Pastoral Care">
                                 <div className="pt-3 text-xs text-gray-600 font-light"><p>Need guidance? Open an inquiry to dispatch an internal message.</p></div>
                             </AccordionItem>

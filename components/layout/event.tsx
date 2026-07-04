@@ -232,7 +232,7 @@ export const EventsPage = () => {
                                 toward the light
                             </h2>
 
-                            <div className="mt-6 flex items-center gap-3">
+                            {/* <div className="mt-6 flex items-center gap-3">
                                 <div className="flex -space-x-2">
                                     <img
                                         className="w-8 h-8 rounded-full border-2 border-[#F4F1EA] object-cover"
@@ -251,11 +251,11 @@ export const EventsPage = () => {
                                 <span className="text-xs text-gray-500 font-medium">
                                     Join 142 others attending
                                 </span>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Stats bar */}
-                        <div className="mt-8 pt-6 border-t border-[#121212]/5 grid grid-cols-2 gap-4">
+                        {/* <div className="mt-8 pt-6 border-t border-[#121212]/5 grid grid-cols-2 gap-4">
                             <div className="flex items-center gap-2 text-gray-600">
                                 <Clock size={14} className="text-[#8A817C]" />
                                 <span className="text-xs font-medium">
@@ -273,7 +273,7 @@ export const EventsPage = () => {
                                     {featuredVenue?.name ?? "—"}
                                 </span>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* ── Events list ───────────────────────────────────── */}

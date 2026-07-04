@@ -340,7 +340,7 @@ export const HomePage = () => {
                                 />
                                 <div className="flex items-center justify-between pt-1 border-t border-[#121212]/5">
                                     <span className="text-xs text-gray-400 font-light">Official Notice</span>
-                                    <button className="text-xs font-semibold text-[#121212] hover:text-gray-600 transition-colors">View Details</button>
+                                    {/* <button className="text-xs font-semibold text-[#121212] hover:text-gray-600 transition-colors">View Details</button> */}
                                 </div>
                             </div>
                         ))}

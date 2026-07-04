@@ -122,13 +122,15 @@ function VirtualAccountCard() {
                     <p className="text-xs text-gray-500 font-light mb-4">
                         Get a dedicated bank account number for tithes and offerings.
                     </p>
-                    <button
+                    {/* <button
                         type="button"
                         onClick={() => setShowBvnForm(true)}
                         className="bg-[#121212] text-white text-xs uppercase tracking-widest font-semibold px-5 py-2.5 rounded-xl hover:bg-gray-800 transition-colors"
                     >
                         Generate Account
-                    </button>
+                    </button> */}
+                    <p className="text-xs text-gray-400 font-light"> Coming soon!
+                    </p>
                 </div>
             ) : (
                 <form onSubmit={handleCreate} className="space-y-3">

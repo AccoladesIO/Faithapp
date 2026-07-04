@@ -180,7 +180,7 @@ export const PersonalAttendancePage = () => {
             </div>
 
             {/* ── Stats block ────────────────────────────────────────────── */}
-            <div className="px-6 pb-6 border-b border-[#121212]/5 bg-[#F9F9F9]">
+            <div className="px-6 pb-6 border-b border-[#121212]/5 bg-[#F9F9F9] mt-3">
                 <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white p-4 border border-[#121212]/5 shadow-sm flex flex-col justify-between">
                         <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold flex items-center gap-1">
@@ -215,7 +215,7 @@ export const PersonalAttendancePage = () => {
             <div className="px-6 mt-8 space-y-4">
                 <div className="flex justify-between items-center px-1">
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-                        Checked-In Services
+                        All Programs
                     </span>
                     {stats.lastCheckedInDate && !isLoading && (
                         <span className="text-xs text-gray-400 font-light">
