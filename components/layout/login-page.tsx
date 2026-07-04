@@ -107,7 +107,7 @@ export const LoginPage = () => {
                     <div>
                         <div className="flex justify-between items-center mb-1.5">
                             <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Password</label>
-                            <button type="button" className="text-[11px] text-[#8A817C] font-light hover:underline">Forgot?</button>
+                            {/* <button type="button" className="text-[11px] text-[#8A817C] font-light hover:underline">Forgot?</button> */}
                         </div>
                         <div className="relative rounded-xl border border-[#121212]/10 focus-within:border-[#121212]/30 transition-colors bg-[#F4F1EA]/20">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
