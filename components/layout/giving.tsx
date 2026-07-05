@@ -615,9 +615,9 @@ export const GivingPage = () => {
                     {/* Statement download */}
                     <StatementDownload />
 
-                    <p className="text-[11px] text-gray-400 font-light text-center flex items-center justify-center gap-1">
+                    {/* <p className="text-[11px] text-gray-400 font-light text-center flex items-center justify-center gap-1">
                         <ShieldCheck size={12} className="text-green-600" /> Bank-grade processing • Secure Ledger
-                    </p>
+                    </p> */}
 
                     {/* Pending proofs */}
                     {proofs.length > 0 && (

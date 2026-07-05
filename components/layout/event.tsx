@@ -277,7 +277,7 @@ export const EventsPage = () => {
                     </div>
 
                     {/* ── Events list ───────────────────────────────────── */}
-                    <div className="px-6 lg:px-12 mt-12 max-w-3xl">
+                    <div className="px-6 lg:px-12 max-w-3xl">
                         <h3 className="text-2xl font-light tracking-tight mb-6 text-[#121212]">
                             Upcoming Services
                         </h3>
