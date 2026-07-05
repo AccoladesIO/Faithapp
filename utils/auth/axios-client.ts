@@ -14,10 +14,53 @@ export type AuthPayload = {
     requires_password_change?: boolean;
 };
 
+
+interface ApiErrorBody {
+    statusCode?: number;
+    message?: string | string[];
+    error?: string;
+}
+
+
+export function extractErrorMessage(err: unknown): string {
+    if (err instanceof AxiosError) {
+        const data = err.response?.data as ApiErrorBody | undefined;
+
+        if (data?.message) {
+            if (Array.isArray(data.message) && data.message.length > 0) {
+                return data.message[0];
+            }
+            if (typeof data.message === "string" && data.message.trim()) {
+                return data.message.trim();
+            }
+        }
+
+        if (typeof data?.error === "string" && data.error.trim()) {
+            return data.error.trim();
+        }
+
+        if (!err.response) {
+            return "Network error — please check your connection.";
+        }
+
+        return (
+            err.response.statusText ||
+            `Request failed with status ${err.response.status}`
+        );
+    }
+
+    if (err instanceof Error) return err.message;
+    return "An unexpected error occurred.";
+}
+
+// ─── Axios instance ───────────────────────────────────────────────────────────
+
 export const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
     withCredentials: true,
 });
+
+// ─── Request interceptor — attach Bearer token ────────────────────────────────
 
 api.interceptors.request.use((config) => {
     const cfg = config as RetriableConfig;
@@ -27,6 +70,8 @@ api.interceptors.request.use((config) => {
     }
     return config;
 });
+
+// ─── Auth helpers ─────────────────────────────────────────────────────────────
 
 export const commitAuthPayload = (payload: AuthPayload) => {
     const expiresAt = Date.now() + payload.expires_in * 1000;
@@ -88,14 +133,18 @@ export const refreshAccessToken = (): Promise<string> => {
     return refreshPromise;
 };
 
+
 api.interceptors.response.use(
     (res) => res,
     async (error: AxiosError) => {
         const config = error.config as RetriableConfig | undefined;
-        if (!config || config._retry || config._skipAuth) {
-            return Promise.reject(error);
-        }
-        if (error.response?.status === 401) {
+
+        if (
+            config &&
+            !config._retry &&
+            !config._skipAuth &&
+            error.response?.status === 401
+        ) {
             console.log(
                 `[Auth ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]`,
                 `⚠️  401 on ${config.url} — attempting token refresh before retry`
@@ -104,7 +153,7 @@ api.interceptors.response.use(
             try {
                 const newToken = await refreshAccessToken();
                 config.headers = config.headers ?? {};
-                (config.headers as any).Authorization = `Bearer ${newToken}`;
+                (config.headers as Record<string, string>).Authorization = `Bearer ${newToken}`;
                 console.log(
                     `[Auth ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]`,
                     `🔁 Retrying ${config.url} with new token`
@@ -116,9 +165,9 @@ api.interceptors.response.use(
                     "❌ Refresh failed on 401 retry — clearing session"
                 );
                 tokenStore.clear();
-                return Promise.reject(refreshErr);
+                return Promise.reject(new Error("Session expired. Please sign in again."));
             }
         }
-        return Promise.reject(error);
+        return Promise.reject(new Error(extractErrorMessage(error)));
     }
 );
