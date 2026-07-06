@@ -2,11 +2,17 @@ import { Plus_Jakarta_Sans, Outfit, Sacramento, Tangerine } from "next/font/goog
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/context/auth-context";
+import { StandaloneGate } from "@/components/pwa/standalone-gate";
 
 export const metadata: Metadata = {
-  title: "Faith App by RCCGDC",
-  description: "Faith app by RCCGDC for church members, events, and community engagement.",
+  title: "Discovery Hub by RCCGDC",
+  description: "Discovery Hub by RCCGDC for church members, events, and community engagement.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/image.png",
+    shortcut: "/image.png",
+    apple: "/image.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -22,16 +28,17 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
 };
+
 const headingFont = Plus_Jakarta_Sans({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: ["600", "700", "800"], // Bold weights for titles
+  weight: ["600", "700", "800"],
 });
 
 const bodyFont = Outfit({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500"], // Regular and Medium for info
+  weight: ["400", "500"],
 });
 
 const scriptFont = Sacramento({
@@ -46,20 +53,18 @@ const logoFont = Tangerine({
   weight: ["400", "700"],
 });
 
-
-
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
       className={`${headingFont.variable} ${bodyFont.variable} ${scriptFont.variable} ${logoFont.variable} h-full antialiased`}
     >
       <body className="min-h-full font-body bg-slate-50 text-slate-900 w-full mx-auto">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <StandaloneGate>{children}</StandaloneGate>
+        </AuthProvider>
       </body>
     </html>
   );

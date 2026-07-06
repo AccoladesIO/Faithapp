@@ -1,7 +1,7 @@
 {
-    "name": "Faith App by RCCGDC",
+    "name": "Discovery Hub by RCCGDC",
     "short_name": "Faith",
-    "description": "Faith app by RCCGDC for church members, events, and community engagement.",
+    "description": "Discovery Hub by RCCGDC for church members, events, and community engagement.",
     "start_url": "/",
     "display": "fullscreen",
     "background_color": "#FFFFFF",
