@@ -7,20 +7,20 @@ import { api } from "@/utils/auth/axios-client";
 
 export interface TitheAccount {
     id: string;
-    name: string;
+    accountName: string;
     bankName: string;
     accountNumber: string;
+    currency: string;
     isActive: boolean;
 }
 
 export interface TitheRecord {
     id: string;
-    member: { id: string; firstname: string; lastname: string };
     amount: string;
-    currency: string;
-    transactionDate: string;
-    batch: { id: string } | null;
-    account: { id: string; name: string };
+    paymentDate: string;
+    bankName: string | null;
+    reference: string | null;
+    batch: { id: string; titheAccount: TitheAccount | null } | null;
 }
 
 export type ProofStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -29,7 +29,7 @@ export interface ProofOfPayment {
     id: string;
     amount: string;
     status: ProofStatus;
-    submittedAt: string;
+    createdAt: string;
 }
 
 export interface VirtualAccount {
@@ -62,7 +62,7 @@ export interface UseTithesReturn {
     isLoadingVirtualAccount: boolean;
     isSubmittingProof: boolean;
     isCreatingVirtualAccount: boolean;
-    isDownloading: boolean;
+    isSendingStatement: boolean;
 
     error: string | null;
     proofError: string | null;
@@ -70,7 +70,7 @@ export interface UseTithesReturn {
 
     submitProof: (payload: SubmitProofPayload) => Promise<void>;
     createVirtualAccount: (bvn: string) => Promise<void>;
-    downloadStatement: (fromMonth: string, toMonth: string) => Promise<string>;
+    emailTitheStatement: (fromMonth: string, toMonth: string) => Promise<string>;
     refetch: () => void;
 }
 
@@ -84,7 +84,7 @@ export function useTithes(): UseTithesReturn {
     const [isLoadingVirtualAccount, setIsLoadingVirtualAccount] = useState(true);
     const [isSubmittingProof, setIsSubmittingProof] = useState(false);
     const [isCreatingVirtualAccount, setIsCreatingVirtualAccount] = useState(false);
-    const [isDownloading, setIsDownloading] = useState(false);
+    const [isSendingStatement, setIsSendingStatement] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
     const [proofError, setProofError] = useState<string | null>(null);
@@ -186,16 +186,16 @@ export function useTithes(): UseTithesReturn {
         }
     }, []);
 
-    // ── Download statement ────────────────────────────────────────────────────
-    const downloadStatement = useCallback(async (fromMonth: string, toMonth: string) => {
-        setIsDownloading(true);
+    // ── Email tithe statement ──────────────────────────────────────────────────
+    const emailTitheStatement = useCallback(async (fromMonth: string, toMonth: string) => {
+        setIsSendingStatement(true);
         try {
             const res = await api.post<{ message: string }>(
-                `/tithes/me/download?fromMonth=${fromMonth}&toMonth=${toMonth}`
+                `/tithes/me/statement/send?fromMonth=${fromMonth}&toMonth=${toMonth}`
             );
             return res.data.message;
         } finally {
-            setIsDownloading(false);
+            setIsSendingStatement(false);
         }
     }, []);
 
@@ -210,13 +210,13 @@ export function useTithes(): UseTithesReturn {
         isLoadingVirtualAccount,
         isSubmittingProof,
         isCreatingVirtualAccount,
-        isDownloading,
+        isSendingStatement,
         error,
         proofError,
         virtualAccountError,
         submitProof,
         createVirtualAccount,
-        downloadStatement,
+        emailTitheStatement,
         refetch,
     };
 }

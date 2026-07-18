@@ -53,7 +53,7 @@ export class VerifyUser {
         const res = await api.post(
             "/auth/login",
             { email, password, deviceId },
-            { _skipAuth: true } as any
+            { _skipAuth: true }
         );
 
         const payload: AuthPayload = res.data?.data;
@@ -92,7 +92,7 @@ export class VerifyUser {
                     headers: {
                         Authorization: `Bearer ${current.accessToken}`,
                     },
-                } as any
+                }
             );
         } catch {
             // Swallow logout errors

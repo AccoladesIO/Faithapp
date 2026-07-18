@@ -1,7 +1,7 @@
 "use client"
 
 import { BottomNav } from '@/components/layout/bottom-nav';
-// import Header from '@/components/layout/header';
+import { AppHeader } from '@/components/layout/app-header';
 import React, { useState } from 'react';
 
 
@@ -10,7 +10,7 @@ export default function AppLayout({ activeTab, children }: { activeTab: string, 
 
     return (
         <div className="relative min-h-screen bg-slate-50">
-            {/* <Header /> */}
+            <AppHeader />
             <main className="">
                 {children}
             </main>

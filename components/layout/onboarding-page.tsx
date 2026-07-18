@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
     User, BookOpen, Droplets, Briefcase,
-    Info, CheckCircle2, Loader2, ChevronRight, ChevronLeft,
+    Info, CheckCircle2, Loader2, ChevronRight, ChevronLeft, ArrowLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "@/utils/auth/axios-client";
+
+const CHURCH_NAME = process.env.NEXT_PUBLIC_CHURCH_NAME ?? "RCCG Discovery Centre";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,7 +99,7 @@ const INITIAL_FORM: OnboardingFormData = {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div>
-            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
+            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">
                 {label}
             </label>
             {children}
@@ -112,8 +115,8 @@ const selectCls = inputCls + " appearance-none";
 function StepHeader({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
     return (
         <div className="flex items-center gap-2 border-b border-[#121212]/5 pb-3">
-            <Icon size={16} className="text-[#8A817C]" />
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-400">{label}</h3>
+            <Icon size={16} className="text-[#756E69]" />
+            <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-500">{label}</h3>
         </div>
     );
 }
@@ -220,15 +223,25 @@ export const OnboardingPage = () => {
 
             {/* ── Hero ─────────────────────────────────────────────────── */}
             <div className="relative w-full h-[20vh] overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1445108771252-d1cc31a02a3c?q=80&w=1200&auto=format&fit=crop"
-                    alt="Sanctuary onboarding backdrop"
-                    className="w-full h-full object-cover opacity-85"
+                <Image
+                    src="/images/onboarding-welcome.jpg"
+                    alt="Welcome onboarding backdrop"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover opacity-85"
                 />
                 <div className="absolute inset-0 bg-black/40" />
+                <button
+                    onClick={() => router.back()}
+                    aria-label="Go back"
+                    className="absolute top-4 left-4 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+                >
+                    <ArrowLeft size={18} />
+                </button>
                 <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-[#FFFFFF] via-[#FFFFFF]/20 to-transparent">
-                    <span className="text-xs uppercase tracking-widest text-white/80 font-semibold drop-shadow-sm">
-                        RCCG DISCOVERY CENTER
+                    <span className="text-xs uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1 drop-shadow-sm">
+                        <User size={12} /> Welcome
                     </span>
                     <h1 className="text-2xl font-light tracking-tight text-white mt-1 drop-shadow-md">
                         Membership Onboarding
@@ -331,7 +344,7 @@ export const OnboardingPage = () => {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Date of Birth</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Date of Birth</p>
                                     <div className="grid grid-cols-2 gap-3">
                                         <Field label="Day">
                                             <select
@@ -542,7 +555,7 @@ export const OnboardingPage = () => {
                             <div className="space-y-4">
                                 <StepHeader icon={BookOpen} label="Step 2: Spiritual Foundation" />
 
-                                <Field label="Date You Joined RCCG Discovery Centre">
+                                <Field label={`Date You Joined ${CHURCH_NAME}`}>
                                     <input
                                         type="date"
                                         required
@@ -667,7 +680,7 @@ export const OnboardingPage = () => {
                                         ["Workforce Intent", form.joinWorkforce ? "Yes — Serve" : "No — Member only"],
                                     ] as [string, string][]).map(([label, value]) => (
                                         <div key={label} className="flex justify-between gap-4">
-                                            <span className="text-gray-400">{label}</span>
+                                            <span className="text-gray-500">{label}</span>
                                             <span className="font-normal text-[#121212] text-right">{value}</span>
                                         </div>
                                     ))}
@@ -712,11 +725,11 @@ export const OnboardingPage = () => {
                 {/* ── Processing ───────────────────────────────────────── */}
                 {isProcessing && (
                     <div className="text-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8A817C]" />
-                        <h3 className="text-sm uppercase tracking-widest text-gray-400 font-semibold">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#756E69]" />
+                        <h3 className="text-sm uppercase tracking-widest text-gray-500 font-semibold">
                             Creating Your Account
                         </h3>
-                        <p className="text-xs text-gray-400 font-light mt-1">Setting up your profile…</p>
+                        <p className="text-xs text-gray-500 font-light mt-1">Setting up your profile…</p>
                     </div>
                 )}
 
@@ -728,7 +741,7 @@ export const OnboardingPage = () => {
                         </div>
                         <h3 className="text-xl font-normal tracking-tight mb-2">Welcome to the Family</h3>
                         <p className="text-sm text-gray-500 font-light mb-6">
-                            Your membership at RCCG Discovery Centre has been registered. You can now sign in to your account.
+                            Your membership at {CHURCH_NAME} has been registered. You can now sign in to your account.
                         </p>
                         <button
                             onClick={() => router.push("/")}
@@ -742,7 +755,7 @@ export const OnboardingPage = () => {
                 {/* ── Sign in link ─────────────────────────────────────── */}
                 {!isSuccess && (
                     <div className="text-center mt-8">
-                        <p className="text-xs text-gray-400 font-light">
+                        <p className="text-xs text-gray-500 font-light">
                             Already part of the family?{" "}
                             <button
                                 className="text-[#121212] font-semibold hover:underline"

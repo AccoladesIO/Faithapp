@@ -125,6 +125,15 @@ function resolveSlot(slot: ServiceSlot, now: Date): ResolvedSlot {
     };
 }
 
+type SlotStatus = "upcoming" | "ongoing" | "ended";
+
+function deriveSlotStatus(slot: { startTime: string; endTime: string } | null, nowMs: number): SlotStatus | null {
+    if (!slot) return null;
+    if (nowMs < parseSlotMs(slot.startTime)) return "upcoming";
+    if (nowMs > parseSlotMs(slot.endTime)) return "ended";
+    return "ongoing";
+}
+
 function haversineMeters(
     lat1: number,
     lon1: number,
@@ -165,6 +174,8 @@ export interface UseEventsReturn {
     activeSlot: ResolvedSlot | null;
     /** Next slot that will open — shown when nothing is active yet */
     upcomingSlot: ResolvedSlot | null;
+    /** Real start/end status of whichever slot is being displayed (activeSlot ?? upcomingSlot ?? heroEvent's first slot) — independent of check-in-window state, so it stays accurate even for events with onlineAttendanceEnabled = false */
+    displaySlotStatus: SlotStatus | null;
     isLoading: boolean;
     error: string | null;
     checkInState: CheckInState;
@@ -221,7 +232,7 @@ export function useEvents(): UseEventsReturn {
     // 4. Among eligible candidates, pick the one whose startTime is closest
     //    to now (most recently started = most likely currently attended).
     // 5. Fall back to events[0] as a passive hero (no CTA) if nothing is live.
-    const { heroEvent, activeSlot, upcomingSlot } = (() => {
+    const { heroEvent, activeSlot, upcomingSlot, displaySlotStatus } = (() => {
         const now = new Date();
         const nowMs = now.getTime();
         const FRESH_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
@@ -268,10 +279,14 @@ export function useEvents(): UseEventsReturn {
                 }
             }
 
+            const fallbackHero = soonest?.event ?? events[0] ?? null;
+            const fallbackSlot = soonest?.resolved ?? fallbackHero?.serviceSlots[0] ?? null;
+
             return {
-                heroEvent: soonest?.event ?? events[0] ?? null,
+                heroEvent: fallbackHero,
                 activeSlot: null as ResolvedSlot | null,
                 upcomingSlot: soonest?.resolved ?? null,
+                displaySlotStatus: deriveSlotStatus(fallbackSlot, nowMs2),
             };
         }
 
@@ -290,6 +305,7 @@ export function useEvents(): UseEventsReturn {
             heroEvent: best.event,
             activeSlot: best.resolved as ResolvedSlot | null,
             upcomingSlot: null,
+            displaySlotStatus: "ongoing" as SlotStatus,
         };
     })();
 
@@ -392,6 +408,7 @@ export function useEvents(): UseEventsReturn {
         heroEvent,
         activeSlot,
         upcomingSlot,
+        displaySlotStatus,
         isLoading,
         error,
         checkInState,

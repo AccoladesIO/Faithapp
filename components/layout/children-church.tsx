@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
-    Baby, LogIn, LogOut, ChevronRight, ChevronLeft,
+    Baby, LogIn, LogOut, ChevronRight, ChevronLeft, ArrowLeft,
     Plus, Trash2, CheckCircle2, X, Loader2, AlertCircle,
-    ShieldCheck, Pencil, Lock,
+    ShieldCheck, Pencil, Lock, Search, Clock, Flag, Users,
 } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
 import { useEvents } from "@/hooks/use-events";
 import {
     useChildrenChurch,
-    Child, Guardian, CheckinResult, VerifyResult, CheckinRecord,
+    Child, Guardian, CheckinResult, VerifyResult, CheckinRecord, ActiveCheckIn,
 } from "@/hooks/use-children-church";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -73,7 +75,7 @@ const selectCls = inputCls + " appearance-none";
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div>
-            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">{label}</label>
+            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">{label}</label>
             {children}
         </div>
     );
@@ -85,11 +87,11 @@ function WorkerOnlyMessage({ tabName }: { tabName: string }) {
     return (
         <div className="flex flex-col items-center gap-4 py-14 text-center">
             <div className="w-14 h-14 rounded-full bg-[#F4F1EA] flex items-center justify-center">
-                <Lock size={22} className="text-[#8A817C]" />
+                <Lock size={22} className="text-[#756E69]" />
             </div>
             <div>
                 <h3 className="text-sm font-medium text-[#121212]">{tabName} — Children Church Workers Only</h3>
-                <p className="text-xs text-gray-400 font-light mt-1 max-w-xs">
+                <p className="text-xs text-gray-500 font-light mt-1 max-w-xs">
                     Only Children Church workers can perform {tabName.toLowerCase()} operations.
                 </p>
             </div>
@@ -108,12 +110,12 @@ function PickupCodeCard({ result, onDone }: { result: CheckinResult; onDone: () 
             </div>
             <div>
                 <h3 className="text-lg font-normal tracking-tight text-[#121212]">Child Checked In</h3>
-                <p className="text-xs text-gray-400 font-light mt-1">Show this code when collecting the child</p>
+                <p className="text-xs text-gray-500 font-light mt-1">Show this code when collecting the child</p>
             </div>
             <div className="bg-[#F4F1EA] rounded-2xl p-6 mx-auto max-w-[220px]">
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">Pickup Code</p>
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">Pickup Code</p>
                 <p className="text-4xl font-bold tracking-[0.25em] text-[#121212]">{result.pickupCode}</p>
-                <p className="text-[10px] text-gray-400 font-light mt-2">{formatTime(result.checkinTime)}</p>
+                <p className="text-[10px] text-gray-500 font-light mt-2">{formatTime(result.checkinTime)}</p>
             </div>
             <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 font-light">
                 ⚠ This code is shown once only. Screenshot or memorise it before continuing.
@@ -185,20 +187,20 @@ function ChildDetailPanel({
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-3">
-                <button onClick={onClose} className="p-1.5 text-[#8A817C] hover:text-[#121212] rounded-lg hover:bg-[#F4F1EA] transition-colors">
+                <button onClick={onClose} className="p-1.5 text-[#756E69] hover:text-[#121212] rounded-lg hover:bg-[#F4F1EA] transition-colors">
                     <ChevronLeft size={16} />
                 </button>
                 <ChildAvatar name={`${child.firstname} ${child.lastname}`} />
                 <div>
                     <h2 className="text-base font-medium text-[#121212]">{child.firstname} {child.lastname}</h2>
-                    <p className="text-xs text-gray-400 font-light">{calcAge(child.dateOfBirth)} · {child.classGroup?.name ?? "Unassigned"}</p>
+                    <p className="text-xs text-gray-500 font-light">{calcAge(child.dateOfBirth)} · {child.classGroup?.name ?? "Unassigned"}</p>
                 </div>
             </div>
 
             <div className="flex bg-[#F4F1EA] p-0.5 rounded-xl">
                 {(["info", "guardians", "history"] as const).map((k) => (
                     <button key={k} onClick={() => setTab(k)}
-                        className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors ${tab === k ? "bg-white text-[#121212] shadow-sm" : "text-[#8A817C]"}`}>
+                        className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors ${tab === k ? "bg-white text-[#121212] shadow-sm" : "text-[#756E69]"}`}>
                         {k}
                     </button>
                 ))}
@@ -208,16 +210,16 @@ function ChildDetailPanel({
                 <div className="space-y-3">
                     <div className="bg-white border border-[#121212]/5 rounded-2xl p-4 space-y-3 text-xs">
                         <div className="grid grid-cols-2 gap-3">
-                            <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Date of Birth</p><p>{formatDate(child.dateOfBirth)}</p></div>
-                            <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Age</p><p>{calcAge(child.dateOfBirth)}</p></div>
-                            <div className="col-span-2"><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Class Group</p><p>{child.classGroup?.name ?? "—"}</p></div>
-                            <div className="col-span-2"><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Child ID</p><p className="font-mono text-[10px] text-gray-500 break-all">{child.id}</p></div>
+                            <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mb-0.5">Date of Birth</p><p>{formatDate(child.dateOfBirth)}</p></div>
+                            <div><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mb-0.5">Age</p><p>{calcAge(child.dateOfBirth)}</p></div>
+                            <div className="col-span-2"><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mb-0.5">Class Group</p><p>{child.classGroup?.name ?? "—"}</p></div>
+                            <div className="col-span-2"><p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mb-0.5">Child ID</p><p className="font-mono text-[10px] text-gray-500 break-all">{child.id}</p></div>
                         </div>
                     </div>
                     <div className="bg-white border border-[#121212]/5 rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Special Notes</p>
-                            {!editNotes && <button onClick={() => setEditNotes(true)} className="p-1 text-[#8A817C] hover:text-[#121212]"><Pencil size={12} /></button>}
+                            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500">Special Notes</p>
+                            {!editNotes && <button onClick={() => setEditNotes(true)} className="p-1 text-[#756E69] hover:text-[#121212]"><Pencil size={12} /></button>}
                         </div>
                         {editNotes ? (
                             <div className="space-y-2">
@@ -242,27 +244,27 @@ function ChildDetailPanel({
                     {gSuccess && <SuccessBanner message="Guardian added." />}
                     {hook.submitError && <ErrorBanner message={hook.submitError} />}
                     {guardians.length === 0
-                        ? <p className="text-xs text-gray-400 font-light text-center py-4">No guardians registered yet.</p>
+                        ? <p className="text-xs text-gray-500 font-light text-center py-4">No guardians registered yet.</p>
                         : <div className="space-y-2">{guardians.map((g) => (
                             <div key={g.id} className="bg-white border border-[#121212]/5 rounded-xl p-3.5 flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-[#121212]">{g.fullName ?? `${g.firstname ?? ""} ${g.lastname ?? ""}`.trim()}</p>
-                                    <p className="text-[10px] text-gray-400 font-light capitalize mt-0.5">{g.relationship.toLowerCase()}{g.isAuthorizedPickup ? " · Authorised for pickup" : ""}</p>
+                                    <p className="text-[10px] text-gray-500 font-light capitalize mt-0.5">{g.relationship.toLowerCase()}{g.isAuthorizedPickup ? " · Authorised for pickup" : ""}</p>
                                 </div>
-                                <button onClick={async () => { await hook.deleteGuardian(g.id); await loadGuardians(); }} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                <button onClick={async () => { await hook.deleteGuardian(g.id); await loadGuardians(); }} className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                                     <Trash2 size={14} />
                                 </button>
                             </div>
                         ))}</div>}
                     {!showGForm ? (
-                        <button onClick={() => setShowGForm(true)} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#8A817C] hover:border-[#121212]/20 hover:text-[#121212] transition-all">
+                        <button onClick={() => setShowGForm(true)} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#756E69] hover:border-[#121212]/20 hover:text-[#121212] transition-all">
                             <Plus size={13} /> Add Guardian
                         </button>
                     ) : (
                         <form onSubmit={handleAddGuardian} className="bg-white border border-[#121212]/10 rounded-2xl p-4 space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold uppercase tracking-wider text-[#121212]">New Guardian</span>
-                                <button type="button" onClick={() => setShowGForm(false)} className="text-gray-400 hover:text-[#121212]"><X size={15} /></button>
+                                <button type="button" onClick={() => setShowGForm(false)} className="text-gray-500 hover:text-[#121212]"><X size={15} /></button>
                             </div>
                             <Field label="Full Name"><input required type="text" placeholder="Sarah Johnson" value={gForm.fullName} onChange={(e) => setGForm((p) => ({ ...p, fullName: e.target.value }))} className={inputCls} /></Field>
                             <div className="grid grid-cols-2 gap-3">
@@ -294,7 +296,7 @@ function ChildDetailPanel({
                     {histLoading
                         ? [1, 2, 3].map((i) => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)
                         : history.length === 0
-                            ? <p className="text-xs text-gray-400 font-light text-center py-6">No check-in history yet.</p>
+                            ? <p className="text-xs text-gray-500 font-light text-center py-6">No check-in history yet.</p>
                             : history.map((rec) => (
                                 <div key={rec.id} className="bg-white border border-[#121212]/5 rounded-xl p-3.5 flex items-center justify-between">
                                     <div>
@@ -302,7 +304,7 @@ function ChildDetailPanel({
                                             <p className="text-xs font-medium text-[#121212]">{formatDate(rec.checkedInAt)}</p>
                                             {rec.flagged && <span className="text-[8px] uppercase tracking-wider font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded">Flagged</span>}
                                         </div>
-                                        <p className="text-[10px] text-gray-400 font-light mt-0.5">{formatTime(rec.checkedInAt)} · Code: {rec.pickupCode}</p>
+                                        <p className="text-[10px] text-gray-500 font-light mt-0.5">{formatTime(rec.checkedInAt)} · Code: {rec.pickupCode}</p>
                                     </div>
                                     <span className={`text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${rec.checkedOut ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
                                         {rec.checkedOut ? "Checked Out" : "Active"}
@@ -348,14 +350,14 @@ function MyChildrenTab({
             {hook.submitError && !showForm && <ErrorBanner message={hook.submitError} />}
 
             {!showForm ? (
-                <button onClick={() => setShowForm(true)} className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-[#121212]/10 rounded-2xl text-xs font-semibold uppercase tracking-widest text-[#8A817C] hover:border-[#121212]/20 hover:text-[#121212] transition-all">
+                <button onClick={() => setShowForm(true)} className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-[#121212]/10 rounded-2xl text-xs font-semibold uppercase tracking-widest text-[#756E69] hover:border-[#121212]/20 hover:text-[#121212] transition-all">
                     <Plus size={14} /> Register a Child
                 </button>
             ) : (
                 <div className="bg-white border border-[#121212]/10 rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold uppercase tracking-wider text-[#121212]">Register Child</h3>
-                        <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-[#121212]"><X size={16} /></button>
+                        <button onClick={() => setShowForm(false)} className="text-gray-500 hover:text-[#121212]"><X size={16} /></button>
                     </div>
                     <form onSubmit={handleCreate} className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
@@ -376,9 +378,9 @@ function MyChildrenTab({
 
             {children.length === 0 && !showForm ? (
                 <div className="text-center py-12 space-y-3">
-                    <div className="w-14 h-14 rounded-full bg-[#F4F1EA] flex items-center justify-center mx-auto"><Baby size={24} className="text-[#8A817C]" /></div>
-                    <p className="text-sm text-gray-400 font-light">No children registered yet.</p>
-                    <p className="text-xs text-gray-300 font-light">Register a child to manage their church attendance.</p>
+                    <div className="w-14 h-14 rounded-full bg-[#F4F1EA] flex items-center justify-center mx-auto"><Baby size={24} className="text-[#756E69]" /></div>
+                    <p className="text-sm text-gray-500 font-light">No children registered yet.</p>
+                    <p className="text-xs text-gray-500 font-light">Register a child to manage their church attendance.</p>
                 </div>
             ) : (
                 <div className="space-y-2.5">
@@ -388,9 +390,9 @@ function MyChildrenTab({
                             <ChildAvatar name={`${child.firstname} ${child.lastname}`} />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-[#121212]">{child.firstname} {child.lastname}</p>
-                                <p className="text-[10px] text-gray-400 font-light mt-0.5">{calcAge(child.dateOfBirth)} · {child.classGroup?.name ?? "Unassigned"}</p>
+                                <p className="text-[10px] text-gray-500 font-light mt-0.5">{calcAge(child.dateOfBirth)} · {child.classGroup?.name ?? "Unassigned"}</p>
                             </div>
-                            <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
+                            <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
                         </button>
                     ))}
                 </div>
@@ -477,8 +479,8 @@ function CheckInTab({
             {children.length === 0 ? (
                 <div className="text-center py-10 space-y-2">
                     <Baby size={28} className="text-gray-300 mx-auto" />
-                    <p className="text-sm text-gray-400 font-light">No children registered.</p>
-                    <p className="text-xs text-gray-300 font-light">Register a child in My Children first.</p>
+                    <p className="text-sm text-gray-500 font-light">No children registered.</p>
+                    <p className="text-xs text-gray-500 font-light">Register a child in My Children first.</p>
                 </div>
             ) : (
                 <form onSubmit={handleCheckin} className="space-y-4">
@@ -491,9 +493,9 @@ function CheckInTab({
                                     <ChildAvatar name={`${child.firstname} ${child.lastname}`} size="sm" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-[#121212]">{child.firstname} {child.lastname}</p>
-                                        <p className="text-[10px] text-gray-400 font-light">{calcAge(child.dateOfBirth)} · {child.classGroup?.name ?? "Unassigned"}</p>
+                                        <p className="text-[10px] text-gray-500 font-light">{calcAge(child.dateOfBirth)} · {child.classGroup?.name ?? "Unassigned"}</p>
                                     </div>
-                                    {selectedChildId === child.id && <CheckCircle2 size={16} className="text-[#8A817C] flex-shrink-0" />}
+                                    {selectedChildId === child.id && <CheckCircle2 size={16} className="text-[#756E69] flex-shrink-0" />}
                                 </button>
                             ))}
                         </div>
@@ -511,7 +513,7 @@ function CheckInTab({
                     {selectedChildId && (
                         <Field label="Dropped Off By (Guardian)">
                             {loadingGuardians ? (
-                                <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                <div className="flex items-center gap-2 text-xs text-gray-500 py-2">
                                     <Loader2 size={13} className="animate-spin" /> Loading guardians…
                                 </div>
                             ) : childGuardians.length === 0 ? (
@@ -525,9 +527,9 @@ function CheckInTab({
                                             className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${selectedGuardianId === g.id ? "bg-[#EADCC9] border-[#8A817C]/30" : "bg-white border-[#121212]/5 hover:border-[#121212]/10"}`}>
                                             <div>
                                                 <p className="text-xs font-medium text-[#121212]">{g.fullName ?? `${g.firstname ?? ""} ${g.lastname ?? ""}`.trim()}</p>
-                                                <p className="text-[10px] text-gray-400 capitalize">{g.relationship.toLowerCase()}</p>
+                                                <p className="text-[10px] text-gray-500 capitalize">{g.relationship.toLowerCase()}</p>
                                             </div>
-                                            {selectedGuardianId === g.id && <CheckCircle2 size={14} className="text-[#8A817C]" />}
+                                            {selectedGuardianId === g.id && <CheckCircle2 size={14} className="text-[#756E69]" />}
                                         </button>
                                     ))}
                                 </div>
@@ -538,7 +540,7 @@ function CheckInTab({
                     {/* Service slot selector */}
                     <Field label="Service Slot">
                         {allSlots.length === 0 ? (
-                            <p className="text-xs text-gray-400 font-light">No service slots available.</p>
+                            <p className="text-xs text-gray-500 font-light">No service slots available.</p>
                         ) : (
                             <select required value={serviceSlotId} onChange={(e) => setSlotId(e.target.value)} className={selectCls}>
                                 <option value="">-- Select slot --</option>
@@ -625,7 +627,7 @@ function CheckOutTab({
                 </div>
                 <div>
                     <h3 className="text-lg font-normal tracking-tight text-[#121212]">Child Checked Out</h3>
-                    <p className="text-xs text-gray-400 font-light mt-1">The pickup has been logged successfully.</p>
+                    <p className="text-xs text-gray-500 font-light mt-1">The pickup has been logged successfully.</p>
                 </div>
                 <button onClick={() => setDone(false)} className="bg-[#121212] text-white text-xs uppercase tracking-widest font-semibold px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors">
                     Check Out Another
@@ -676,13 +678,13 @@ function CheckOutTab({
                                     <button key={g.id} type="button" onClick={() => setGuardianId(g.id)}
                                         className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all text-left ${selectedGuardianId === g.id ? "bg-[#EADCC9] border-[#8A817C]/30" : "bg-white border-[#121212]/5 hover:border-[#121212]/10"}`}>
                                         <div className="flex items-center gap-2">
-                                            <ShieldCheck size={13} className={selectedGuardianId === g.id ? "text-[#8A817C]" : "text-green-600"} />
+                                            <ShieldCheck size={13} className={selectedGuardianId === g.id ? "text-[#756E69]" : "text-green-600"} />
                                             <div>
                                                 <p className="text-xs font-medium text-[#121212]">{g.fullName ?? `${g.firstname ?? ""} ${g.lastname ?? ""}`.trim()}</p>
-                                                <p className="text-[10px] text-gray-400 capitalize">{g.relationship?.toLowerCase()}</p>
+                                                <p className="text-[10px] text-gray-500 capitalize">{g.relationship?.toLowerCase()}</p>
                                             </div>
                                         </div>
-                                        {selectedGuardianId === g.id && <CheckCircle2 size={14} className="text-[#8A817C]" />}
+                                        {selectedGuardianId === g.id && <CheckCircle2 size={14} className="text-[#756E69]" />}
                                     </button>
                                 ))}
                             </div>
@@ -709,40 +711,213 @@ function CheckOutTab({
     );
 }
 
+// ─── TAB 4: Roster search (workers only) ─────────────────────────────────────
+
+function RosterTab({
+    hook, isWorker, onChildSelect,
+}: {
+    hook: ReturnType<typeof useChildrenChurch>;
+    isWorker: boolean;
+    onChildSelect: (child: Child) => void;
+}) {
+    const [query, setQuery] = useState("");
+    const [results, setResults] = useState<Child[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [hasSearched, setHasSearched] = useState(false);
+
+    if (!isWorker) return <WorkerOnlyMessage tabName="Roster" />;
+
+    const runSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSearching(true);
+        setSearchError(null);
+        try {
+            const res = await hook.searchChildren(query.trim() || undefined);
+            setResults(res.data);
+            setHasSearched(true);
+        } catch (err: unknown) {
+            setSearchError(err instanceof Error ? err.message : "Search failed.");
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    return (
+        <div className="space-y-5">
+            <div className="bg-[#F4F1EA]/50 border border-[#121212]/5 rounded-2xl p-4">
+                <h4 className="text-xs font-semibold text-[#121212] mb-1">Search Roster</h4>
+                <p className="text-xs text-gray-500 font-light leading-relaxed">
+                    Find any registered child across the whole department by name.
+                </p>
+            </div>
+
+            <form onSubmit={runSearch} className="flex gap-2">
+                <input
+                    type="text"
+                    placeholder="Search by name…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className={inputCls + " flex-1"}
+                />
+                <button type="submit" disabled={isSearching}
+                    className="bg-[#121212] text-white px-4 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50">
+                    {isSearching ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                </button>
+            </form>
+
+            {searchError && <ErrorBanner message={searchError} />}
+
+            {hasSearched && !isSearching && (
+                results.length === 0 ? (
+                    <p className="text-xs text-gray-500 font-light text-center py-8">No children found.</p>
+                ) : (
+                    <div className="space-y-2.5">
+                        {results.map((child) => (
+                            <button key={child.id} onClick={() => onChildSelect(child)}
+                                className="w-full bg-white border border-[#121212]/5 rounded-2xl p-4 flex items-center gap-3 shadow-sm hover:border-[#121212]/10 transition-colors text-left">
+                                <ChildAvatar name={`${child.firstname} ${child.lastname}`} />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-[#121212]">{child.firstname} {child.lastname}</p>
+                                    <p className="text-[10px] text-gray-500 font-light mt-0.5">{calcAge(child.dateOfBirth)} · {child.classGroup?.name ?? "Unassigned"}</p>
+                                </div>
+                                <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
+                            </button>
+                        ))}
+                    </div>
+                )
+            )}
+        </div>
+    );
+}
+
+// ─── TAB 5: Active check-ins board (workers only) ────────────────────────────
+
+function ActiveBoardTab({ hook, isWorker }: { hook: ReturnType<typeof useChildrenChurch>; isWorker: boolean }) {
+    const [active, setActive] = useState<ActiveCheckIn[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const load = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await hook.getActiveCheckIns();
+            setActive(res);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Could not load active check-ins.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [hook]);
+
+    useEffect(() => { if (isWorker) load(); }, [isWorker, load]);
+
+    if (!isWorker) return <WorkerOnlyMessage tabName="Active Board" />;
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold text-[#121212] flex items-center gap-1.5">
+                    <Users size={13} className="text-[#756E69]" /> Currently Checked In ({active.length})
+                </h4>
+            </div>
+
+            {isLoading ? (
+                <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+            ) : error ? (
+                <ErrorBanner message={error} />
+            ) : active.length === 0 ? (
+                <div className="text-center py-12 space-y-2">
+                    <Baby size={28} className="text-gray-300 mx-auto" />
+                    <p className="text-sm text-gray-500 font-light">No children currently checked in.</p>
+                </div>
+            ) : (
+                <div className="space-y-2.5">
+                    {active.map((c) => (
+                        <div key={c.id} className="bg-white border border-[#121212]/5 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+                            <ChildAvatar name={`${c.child.firstname} ${c.child.lastname}`} />
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                    <p className="text-sm font-medium text-[#121212]">{c.child.firstname} {c.child.lastname}</p>
+                                    {c.flagReason && (
+                                        <span className="flex items-center gap-0.5 text-[8px] uppercase tracking-wider font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded">
+                                            <Flag size={8} /> Flagged
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-gray-500 font-light mt-0.5">
+                                    {c.child.classGroup?.name ?? "Unassigned"} · Dropped off by {c.droppedOffByName ?? "—"}
+                                </p>
+                                {c.flagReason && (
+                                    <p className="text-[10px] text-red-600 font-light mt-0.5">{c.flagReason}</p>
+                                )}
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                                <p className="text-[10px] text-gray-500 font-light flex items-center gap-0.5 justify-end">
+                                    <Clock size={10} /> {formatTime(c.checkinTime)}
+                                </p>
+                                <p className="text-[10px] text-gray-500 font-mono mt-0.5">{c.pickupCode}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type Tab = "children" | "checkin" | "checkout";
+type Tab = "children" | "checkin" | "checkout" | "roster" | "active";
 
 export const ChildrenChurchPage = () => {
+    const router = useRouter();
     const { profile } = useProfile();
     const memberId = profile?.id ?? "";
-    // Check-In and Check-Out are only available to workers in the Children Church department
+    // Check-In and Check-Out are gated on the CHILDREN_CHURCH department key (not name — a
+    // department can be renamed, or multiple departments can share the same key), matching
+    // the backend's own authorization check in ChildrenChurchService. Checked on either the
+    // primary or secondary department, same as the backend.
     const isChildrenChurchWorker =
         profile?.role === "WORKER" &&
-        profile?.workerProfile?.department?.name === "Children Church";
+        (profile?.workerProfile?.department?.key === "CHILDREN_CHURCH" ||
+            profile?.workerProfile?.secondaryDepartment?.key === "CHILDREN_CHURCH");
     const hook = useChildrenChurch();
 
     const [children, setChildren] = useState<Child[]>([]);
     const [activeTab, setActiveTab] = useState<Tab>("children");
     const [selectedChild, setSelected] = useState<Child | null>(null);
 
-    const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
+    const allTabs: { key: Tab; label: string; icon: React.ElementType; workerOnly?: boolean }[] = [
         { key: "children", label: "My Children", icon: Baby },
-        { key: "checkin", label: "Check In", icon: LogIn },
-        { key: "checkout", label: "Check Out", icon: LogOut },
+        { key: "checkin", label: "Check In", icon: LogIn, workerOnly: true },
+        { key: "checkout", label: "Check Out", icon: LogOut, workerOnly: true },
+        { key: "roster", label: "Roster", icon: Search, workerOnly: true },
+        { key: "active", label: "Active", icon: Users, workerOnly: true },
     ];
+    const tabs = allTabs.filter((t) => !t.workerOnly || isChildrenChurchWorker);
 
     return (
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
 
             {/* ── Hero ─────────────────────────────────────────────────── */}
             <div className="relative w-full h-[22vh] overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?q=80&w=1200&auto=format&fit=crop" alt="Children church" className="w-full h-full object-cover" />
+                <Image src="/images/children-church-v2.jpg" alt="Children church" fill priority sizes="100vw" className="object-cover" />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#FFFFFF] via-[#FFFFFF]/10 to-transparent" />
+                <div className="absolute top-4 left-4 z-10">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-2.5 bg-black/25 backdrop-blur-md hover:bg-black/40 text-white rounded-full transition-colors border border-white/10"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft size={16} />
+                    </button>
+                </div>
                 <div className="absolute bottom-0 inset-x-0 p-5">
                     <span className="text-xs uppercase tracking-widest text-white/70 font-semibold flex items-center gap-1.5">
-                        <Baby size={12} /> RCCG Discovery Centre
+                        <Baby size={12} /> Ministry
                     </span>
                     <h1 className="text-2xl font-light tracking-tight text-[#121212] mt-0.5">Children's Church</h1>
                 </div>
@@ -753,13 +928,9 @@ export const ChildrenChurchPage = () => {
                 <div className="flex bg-[#F4F1EA] p-1 rounded-2xl gap-1">
                     {tabs.map(({ key, label, icon: Icon }) => (
                         <button key={key} onClick={() => { setActiveTab(key); setSelected(null); }}
-                            className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl transition-colors relative ${activeTab === key ? "bg-white text-[#121212] shadow-sm" : "text-[#8A817C] hover:text-[#121212]"}`}>
+                            className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl transition-colors ${activeTab === key ? "bg-white text-[#121212] shadow-sm" : "text-[#756E69] hover:text-[#121212]"}`}>
                             <Icon size={15} />
                             <span className="text-[9px] font-bold uppercase tracking-wider">{label}</span>
-                            {/* Lock indicator on worker-only tabs */}
-                            {(key === "checkin" || key === "checkout") && !isChildrenChurchWorker && (
-                                <span className="absolute top-1 right-1"><Lock size={8} className="text-gray-400" /></span>
-                            )}
                         </button>
                     ))}
                 </div>
@@ -776,6 +947,14 @@ export const ChildrenChurchPage = () => {
                 )}
                 {activeTab === "checkin" && <CheckInTab hook={hook} children={children} isWorker={isChildrenChurchWorker} />}
                 {activeTab === "checkout" && <CheckOutTab hook={hook} isWorker={isChildrenChurchWorker} />}
+                {activeTab === "roster" && (
+                    selectedChild ? (
+                        <ChildDetailPanel child={selectedChild} onClose={() => setSelected(null)} hook={hook} memberId={memberId} />
+                    ) : (
+                        <RosterTab hook={hook} isWorker={isChildrenChurchWorker} onChildSelect={setSelected} />
+                    )
+                )}
+                {activeTab === "active" && <ActiveBoardTab hook={hook} isWorker={isChildrenChurchWorker} />}
             </div>
         </div>
     );

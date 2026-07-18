@@ -45,6 +45,8 @@ export interface AttendanceRecord {
 }
 
 // ─── Derived stats ────────────────────────────────────────────────────────────
+// Computed server-side over the member's FULL history (not just the page of
+// records fetched for display below) — see GET /attendances/my-summary.
 
 export interface AttendanceStats {
     totalCount: number;
@@ -54,53 +56,13 @@ export interface AttendanceStats {
     attendanceStreak: number;
 }
 
-function getISOWeek(date: Date): string {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
-    return `${d.getUTCFullYear()}-W${weekNo.toString().padStart(2, "0")}`;
-}
-
-function deriveStats(records: AttendanceRecord[]): AttendanceStats {
-    const totalCount = records.length;
-
-    const presentRecords = records.filter(
-        (r) => r.status === "PRESENT" || r.status === "EARLY" || r.status === "LATE"
-    );
-    const presentCount = presentRecords.length;
-
-    const attendanceRatePercentage =
-        totalCount === 0 ? 0 : Math.round((presentCount / totalCount) * 100);
-
-    const checkinTimes = presentRecords
-        .map((r) => r.checkinTime)
-        .filter((t): t is string => t !== null)
-        .sort()
-        .reverse();
-    const lastCheckedInDate = checkinTimes[0] ?? null;
-
-    const presentWeeks = new Set(
-        presentRecords
-            .filter((r) => r.checkinTime)
-            .map((r) => getISOWeek(new Date(r.checkinTime!)))
-    );
-
-    let streak = 0;
-    const cursor = new Date();
-    for (let i = 0; i < 104; i++) {
-        const week = getISOWeek(cursor);
-        if (presentWeeks.has(week)) {
-            streak++;
-            cursor.setDate(cursor.getDate() - 7);
-        } else {
-            break;
-        }
-    }
-
-    return { totalCount, presentCount, attendanceRatePercentage, lastCheckedInDate, attendanceStreak: streak };
-}
+const EMPTY_STATS: AttendanceStats = {
+    totalCount: 0,
+    presentCount: 0,
+    attendanceRatePercentage: 0,
+    lastCheckedInDate: null,
+    attendanceStreak: 0,
+};
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -114,6 +76,7 @@ export interface UseAttendanceHistoryReturn {
 
 export function useAttendanceHistory(): UseAttendanceHistoryReturn {
     const [records, setRecords] = useState<AttendanceRecord[]>([]);
+    const [stats, setStats] = useState<AttendanceStats>(EMPTY_STATS);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [fetchTick, setFetchTick] = useState(0);
@@ -125,10 +88,16 @@ export function useAttendanceHistory(): UseAttendanceHistoryReturn {
             setIsLoading(true);
             setError(null);
             try {
-                const res = await api.get<{ data: { data: AttendanceRecord[] } }>(
-                    "/attendances/my-history?page=1&limit=10"
-                );
-                if (!cancelled) setRecords(res.data.data.data);
+                const [historyRes, summaryRes] = await Promise.all([
+                    api.get<{ data: { data: AttendanceRecord[] } }>(
+                        "/attendances/my-history?page=1&limit=10"
+                    ),
+                    api.get<{ data: AttendanceStats }>("/attendances/my-summary"),
+                ]);
+                if (!cancelled) {
+                    setRecords(historyRes.data.data.data);
+                    setStats(summaryRes.data.data);
+                }
             } catch (err: unknown) {
                 if (!cancelled)
                     setError(err instanceof Error ? err.message : "Failed to load attendance history.");
@@ -142,7 +111,6 @@ export function useAttendanceHistory(): UseAttendanceHistoryReturn {
     }, [fetchTick]);
 
     const refetch = useCallback(() => setFetchTick((t) => t + 1), []);
-    const stats = deriveStats(records);
 
     return { records, stats, isLoading, error, refetch };
 }

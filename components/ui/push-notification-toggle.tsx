@@ -8,16 +8,29 @@
  */
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BellRing, BellOff, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { usePush } from "@/hooks/use-push";
+import { detectPlatform, type Platform } from "@/lib/platform";
+
+const DENIED_INSTRUCTIONS: Record<Platform, string> = {
+    ios: "Open the iPhone Settings app → Notifications → find this app → turn on Allow Notifications.",
+    "android-chrome": "Long-press this app's icon → App info → Notifications → turn them on. Or Settings → Apps → this app → Notifications.",
+    desktop: "Click the lock or info icon next to the address bar and set Notifications to Allow.",
+    other: "Find this app's notification permission in your device settings and turn it on.",
+};
 
 export function PushNotificationToggle() {
-    const { isSubscribed, permission, isLoading, error, unsubscribe } = usePush();
+    const { isSubscribed, permission, isLoading, error, subscribe, unsubscribe } = usePush();
+    const [platform, setPlatform] = useState<Platform>("other");
+
+    useEffect(() => {
+        setPlatform(detectPlatform());
+    }, []);
 
     if (permission === "unsupported") {
         return (
-            <div className="pt-3 flex items-start gap-2 text-xs text-gray-400 font-light">
+            <div className="pt-3 flex items-start gap-2 text-xs text-gray-500 font-light">
                 <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
                 <p>Push notifications are not supported in this browser.</p>
             </div>
@@ -30,10 +43,10 @@ export function PushNotificationToggle() {
             <div className="bg-white rounded-xl p-3.5 border border-[#121212]/5 flex items-start gap-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isSubscribed ? "bg-green-50" : "bg-gray-100"}`}>
                     {isLoading
-                        ? <Loader2 size={15} className="animate-spin text-[#8A817C]" />
+                        ? <Loader2 size={15} className="animate-spin text-[#756E69]" />
                         : isSubscribed
                             ? <BellRing size={15} className="text-green-600" />
-                            : <BellOff size={15} className="text-gray-400" />}
+                            : <BellOff size={15} className="text-gray-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -42,9 +55,9 @@ export function PushNotificationToggle() {
                         </h4>
                         {isSubscribed && <CheckCircle2 size={12} className="text-green-600 flex-shrink-0" />}
                     </div>
-                    <p className="text-[10px] text-gray-400 font-light leading-relaxed">
+                    <p className="text-[10px] text-gray-500 font-light leading-relaxed">
                         {permission === "denied"
-                            ? "Blocked in your browser settings. Enable notifications for this site to receive alerts."
+                            ? "Blocked in your device settings. See how to turn it back on below."
                             : isSubscribed
                                 ? "You will receive alerts for prayer rosters, service reminders and announcements — even when the app is closed."
                                 : "Notifications are currently disabled on this device."}
@@ -55,7 +68,7 @@ export function PushNotificationToggle() {
             {/* What you receive — only when subscribed */}
             {isSubscribed && (
                 <div className="space-y-1.5 px-1">
-                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
                         You'll be notified about
                     </p>
                     {[
@@ -74,9 +87,20 @@ export function PushNotificationToggle() {
 
             {/* Permission denied helper */}
             {permission === "denied" && (
-                <p className="text-[10px] text-gray-400 font-light px-1 leading-relaxed">
-                    To re-enable: open your browser settings, find this site under Notifications, and set it to Allow. Then log out and back in.
+                <p className="text-[10px] text-gray-500 font-light px-1 leading-relaxed">
+                    {DENIED_INSTRUCTIONS[platform]}
                 </p>
+            )}
+
+            {/* Opt-in button — shown when off and the browser can still prompt */}
+            {!isSubscribed && permission !== "denied" && (
+                <button
+                    onClick={subscribe}
+                    disabled={isLoading}
+                    className="w-full bg-[#121212] text-white text-xs uppercase tracking-widest font-semibold py-2.5 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+                >
+                    {isLoading ? "Processing…" : "Enable Notifications"}
+                </button>
             )}
 
             {/* Opt-out button — only shown when subscribed */}

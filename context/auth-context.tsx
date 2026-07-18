@@ -87,8 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     : "unknown";
                 log("✅ Token refreshed", `new token expires at ${newExpiresAt}`);
             } catch {
-                log("❌ Token refresh failed — clearing session and redirecting to login");
-                tokenStore.clear();
+                log("❌ Token refresh failed — logging out and redirecting to login");
+                // Best-effort: the access token usually still has ~REFRESH_LEAD_MS of
+                // validity left at this point (refresh fires before real expiry), so
+                // this call to /auth/logout typically succeeds and blacklists the JTI
+                // server-side, rather than just discarding the session locally.
+                await authService.logout();
                 router.push("/");
             }
         };

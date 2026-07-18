@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import {
     ArrowLeft, ClipboardList, Plus, Trash2,
     CheckCircle2, Clock, XCircle, Loader2,
-    RefreshCw, CalendarX,
+    RefreshCw, CalendarX, ChevronLeft, ChevronRight, Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLeave, LeaveStatus, LeaveRecord } from "@/hooks/use-leave";
+import { useDepartmentLeave } from "@/hooks/use-department-leave";
+import { useProfile } from "@/hooks/use-profile";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -72,14 +75,14 @@ function LeaveCard({
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <StatusBadge status={record.status} />
-                        <span className="text-[10px] text-gray-400 font-light">
+                        <span className="text-[10px] text-gray-500 font-light">
                             {formatCreatedAt(record.createdAt)}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 text-xs font-medium text-[#121212] mb-1">
                         <span>{formatDate(record.dateFrom)}</span>
-                        <span className="text-gray-400">→</span>
+                        <span className="text-gray-500">→</span>
                         <span>{formatDate(record.dateTo)}</span>
                     </div>
 
@@ -90,13 +93,37 @@ function LeaveCard({
                     <button
                         onClick={() => onDelete(record.id)}
                         disabled={isDeleting}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+                        className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
                         title="Cancel request"
                     >
                         <Trash2 size={14} />
                     </button>
                 )}
             </div>
+        </div>
+    );
+}
+
+// Read-only — HOD/Deputy HOD can see who's requesting and the current status,
+// not approve/decline (that stays an admin action).
+function DepartmentLeaveCard({ record }: { record: LeaveRecord }) {
+    return (
+        <div className="bg-white border border-[#121212]/5 p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <StatusBadge status={record.status} />
+                <span className="text-[10px] text-gray-500 font-light">
+                    {formatCreatedAt(record.createdAt)}
+                </span>
+            </div>
+            <p className="text-xs font-semibold text-[#121212] mb-1">
+                {record.worker.member.firstname} {record.worker.member.lastname}
+            </p>
+            <div className="flex items-center gap-1.5 text-xs font-medium text-[#121212] mb-1">
+                <span>{formatDate(record.dateFrom)}</span>
+                <span className="text-gray-500">→</span>
+                <span>{formatDate(record.dateTo)}</span>
+            </div>
+            <p className="text-xs text-gray-500 font-light line-clamp-2">{record.reason}</p>
         </div>
     );
 }
@@ -123,18 +150,33 @@ const defaultForm = { dateFrom: "", dateTo: "", reason: "" };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+type Tab = "mine" | "department";
+
 export const LeavePage = () => {
     const router = useRouter();
+    const { profile } = useProfile();
     const {
         records, statusFilter, setStatusFilter,
         isLoading, isSubmitting, error, submitError,
         createLeave, deleteLeave,
     } = useLeave();
+    const {
+        records: deptRecords, pagination: deptPagination,
+        isLoading: deptLoading, error: deptError, fetchDepartmentLeave,
+    } = useDepartmentLeave();
+
+    const [tab, setTab] = useState<Tab>("mine");
+    const [deptStatusFilter, setDeptStatusFilter] = useState<LeaveStatus | undefined>(undefined);
 
     const [form, setForm] = useState(defaultForm);
     const [showForm, setShowForm] = useState(false);
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [formSuccess, setFormSuccess] = useState(false);
+
+    useEffect(() => {
+        if (tab === "department") fetchDepartmentLeave(1, deptStatusFilter);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tab, deptStatusFilter]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -166,34 +208,61 @@ export const LeavePage = () => {
 
             {/* ── Header ───────────────────────────────────────────────── */}
             <div className="relative w-full h-[40vh] overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1457139621581-298d1801c832?q=80&w=1703&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                <Image
+                    src="/images/leave-request-backdrop.jpg"
                     alt="Church backdrop"
-                    className="w-full h-full object-cover"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#FFFFFF] via-[#FFFFFF]/20 to-transparent" />
-
-                <div className="absolute top-0 inset-x-0 p-4 flex items-center gap-3">
+                <div className="absolute top-4 left-4 z-10">
                     <button
                         onClick={() => router.back()}
-                        className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                        className="p-2.5 bg-black/25 backdrop-blur-md hover:bg-black/40 text-white rounded-full transition-colors border border-white/10"
+                        aria-label="Go back"
                     >
                         <ArrowLeft size={16} />
                     </button>
-                    <span className="text-xs uppercase tracking-widest text-white/70 font-semibold">Profile</span>
                 </div>
 
                 <div className="absolute bottom-0 inset-x-0 p-6">
-                    <span className="text-xs uppercase tracking-widest text-white/70 font-semibold flex items-center gap-1.5 mb-1">
+                    <span className="text-xs uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1 drop-shadow-sm">
                         <ClipboardList size={12} /> Worker Operations
                     </span>
-                    <h1 className="text-2xl font-light tracking-tight text-[#121212]">Leave Requests</h1>
+                    <h1 className="text-2xl font-light tracking-tight text-white mt-1 drop-shadow-md">Leave Requests</h1>
                 </div>
             </div>
 
-            <div className="px-6 mt-6 space-y-6 max-w-lg mx-auto">
+            <div className="px-6 mt-6 space-y-6 max-w-md mx-auto">
 
+                {/* ── Tab switcher (Department tab only for HOD/Deputy HOD) ── */}
+                {profile?.isHod && (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setTab("mine")}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-xl border transition-colors ${tab === "mine"
+                                ? "bg-[#121212] text-white border-[#121212]"
+                                : "bg-white text-[#756E69] border-[#121212]/10 hover:text-[#121212]"
+                                }`}
+                        >
+                            <ClipboardList size={13} /> My Requests
+                        </button>
+                        <button
+                            onClick={() => setTab("department")}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-xl border transition-colors ${tab === "department"
+                                ? "bg-[#121212] text-white border-[#121212]"
+                                : "bg-white text-[#756E69] border-[#121212]/10 hover:text-[#121212]"
+                                }`}
+                        >
+                            <Users size={13} /> Department
+                        </button>
+                    </div>
+                )}
+
+                {tab === "mine" && (
+                <>
                 {/* ── Success toast ─────────────────────────────────────── */}
                 {formSuccess && (
                     <div className="flex items-center gap-2 bg-green-50 border border-green-100 text-green-700 px-4 py-3 rounded-xl text-xs font-medium">
@@ -213,7 +282,7 @@ export const LeavePage = () => {
                 {!showForm ? (
                     <button
                         onClick={() => setShowForm(true)}
-                        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#8A817C] hover:border-[#121212]/20 hover:text-[#121212] transition-all"
+                        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#756E69] hover:border-[#121212]/20 hover:text-[#121212] transition-all"
                     >
                         <Plus size={14} /> New Leave Request
                     </button>
@@ -225,7 +294,7 @@ export const LeavePage = () => {
                             </h2>
                             <button
                                 onClick={() => { setShowForm(false); setForm(defaultForm); }}
-                                className="text-xs text-gray-400 hover:text-[#121212] transition-colors"
+                                className="text-xs text-gray-500 hover:text-[#121212] transition-colors"
                             >
                                 Cancel
                             </button>
@@ -234,7 +303,7 @@ export const LeavePage = () => {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1.5">
+                                    <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-500 mb-1.5">
                                         Date From
                                     </label>
                                     <input
@@ -246,7 +315,7 @@ export const LeavePage = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1.5">
+                                    <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-500 mb-1.5">
                                         Date To
                                     </label>
                                     <input
@@ -261,7 +330,7 @@ export const LeavePage = () => {
                             </div>
 
                             <div>
-                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1.5">
+                                <label className="block text-[11px] uppercase tracking-wider font-semibold text-gray-500 mb-1.5">
                                     Reason
                                 </label>
                                 <textarea
@@ -292,7 +361,7 @@ export const LeavePage = () => {
                 {/* ── Filter tabs ───────────────────────────────────────── */}
                 <div>
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
                             My Leave History
                         </h3>
                     </div>
@@ -304,7 +373,7 @@ export const LeavePage = () => {
                                 onClick={() => setStatusFilter(opt.value)}
                                 className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full border transition-colors ${statusFilter === opt.value
                                     ? "bg-[#121212] text-white border-[#121212]"
-                                    : "bg-white text-[#8A817C] border-[#121212]/10 hover:text-[#121212]"
+                                    : "bg-white text-[#756E69] border-[#121212]/10 hover:text-[#121212]"
                                     }`}
                             >
                                 {opt.label}
@@ -316,14 +385,14 @@ export const LeavePage = () => {
                     {isLoading ? (
                         <LeaveSkeleton />
                     ) : error ? (
-                        <div className="flex flex-col items-start gap-3 py-8 text-gray-400">
+                        <div className="flex flex-col items-start gap-3 py-8 text-gray-500">
                             <p className="text-sm font-light">{error}</p>
                             <button className="flex items-center gap-1.5 text-xs font-semibold text-[#121212] hover:underline">
                                 <RefreshCw size={12} /> Retry
                             </button>
                         </div>
                     ) : records?.length === 0 ? (
-                        <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
+                        <div className="flex flex-col items-center gap-3 py-12 text-gray-500">
                             <CalendarX size={28} />
                             <p className="text-sm font-light">No leave requests found.</p>
                         </div>
@@ -341,6 +410,82 @@ export const LeavePage = () => {
                         </div>
                     )}
                 </div>
+                </>
+                )}
+
+                {tab === "department" && (
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                                Department Leave Requests
+                            </h3>
+                        </div>
+
+                        <div className="flex gap-2 mb-4 flex-wrap">
+                            {FILTER_OPTIONS.map((opt) => (
+                                <button
+                                    key={opt.label}
+                                    onClick={() => setDeptStatusFilter(opt.value)}
+                                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full border transition-colors ${deptStatusFilter === opt.value
+                                        ? "bg-[#121212] text-white border-[#121212]"
+                                        : "bg-white text-[#756E69] border-[#121212]/10 hover:text-[#121212]"
+                                        }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {deptLoading ? (
+                            <LeaveSkeleton />
+                        ) : deptError ? (
+                            <div className="flex flex-col items-start gap-3 py-8 text-gray-500">
+                                <p className="text-sm font-light">{deptError}</p>
+                                <button
+                                    onClick={() => fetchDepartmentLeave(1, deptStatusFilter)}
+                                    className="flex items-center gap-1.5 text-xs font-semibold text-[#121212] hover:underline"
+                                >
+                                    <RefreshCw size={12} /> Retry
+                                </button>
+                            </div>
+                        ) : deptRecords.length === 0 ? (
+                            <div className="flex flex-col items-center gap-3 py-12 text-gray-500">
+                                <CalendarX size={28} />
+                                <p className="text-sm font-light">No leave requests found.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="space-y-3">
+                                    {deptRecords.map((record) => (
+                                        <DepartmentLeaveCard key={record.id} record={record} />
+                                    ))}
+                                </div>
+
+                                {deptPagination && deptPagination.totalPages > 1 && (
+                                    <div className="flex items-center justify-between mt-4">
+                                        <button
+                                            onClick={() => fetchDepartmentLeave(deptPagination.page - 1, deptStatusFilter)}
+                                            disabled={deptPagination.page <= 1}
+                                            className="flex items-center gap-1 text-xs font-semibold text-[#756E69] hover:text-[#121212] disabled:opacity-40 disabled:hover:text-[#756E69] transition-colors"
+                                        >
+                                            <ChevronLeft size={14} /> Prev
+                                        </button>
+                                        <span className="text-[10px] text-gray-500 font-light">
+                                            Page {deptPagination.page} of {deptPagination.totalPages}
+                                        </span>
+                                        <button
+                                            onClick={() => fetchDepartmentLeave(deptPagination.page + 1, deptStatusFilter)}
+                                            disabled={deptPagination.page >= deptPagination.totalPages}
+                                            className="flex items-center gap-1 text-xs font-semibold text-[#756E69] hover:text-[#121212] disabled:opacity-40 disabled:hover:text-[#756E69] transition-colors"
+                                        >
+                                            Next <ChevronRight size={14} />
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* ── Delete confirm modal ──────────────────────────────────── */}
