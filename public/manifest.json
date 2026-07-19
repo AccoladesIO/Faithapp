@@ -1,6 +1,6 @@
 {
-    "name": "Discovery Hub by RCCGDC",
-    "short_name": "Faith",
+    "name": "Discovery Hub",
+    "short_name": "Discovery Hub",
     "description": "Discovery Hub by RCCGDC for church members, events, and community engagement.",
     "start_url": "/",
     "display": "fullscreen",
