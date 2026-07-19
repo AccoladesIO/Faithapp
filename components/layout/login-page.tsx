@@ -57,7 +57,7 @@ export const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFFFF] text-[#121212] flex flex-col justify-between pb-12 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
+        <div className="h-screen bg-[#FFFFFF] text-[#121212] flex flex-col justify-between pb-12 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
             <div className="relative w-full h-[50vh] md:h-[40vh] overflow-hidden">
                 <Image
                     src="/images/login-backdrop.jpg"
