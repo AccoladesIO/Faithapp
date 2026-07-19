@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { urlBase64ToUint8Array, arrayBufferToBase64 } from "@/lib/push-helpers";
-import { tokenStore } from "@/utils/auth/token-store";
+import { api } from "@/utils/auth/axios-client";
 
 export type PushPermission = "default" | "granted" | "denied" | "unsupported";
 
@@ -17,6 +17,8 @@ export interface UsePushReturn {
     error: string | null;
     /** Call once after first-device login */
     subscribeOnFirstLogin: () => Promise<void>;
+    /** Explicit opt-in from settings — always runs, no "already tried" guard */
+    subscribe: () => Promise<void>;
     /** Explicit opt-out from settings */
     unsubscribe: () => Promise<void>;
 }
@@ -52,13 +54,10 @@ export function usePush(): UsePushReturn {
         init();
     }, []);
 
-    // ── Subscribe — called once after first-device login ─────────────────────
-    const subscribeOnFirstLogin = useCallback(async () => {
+    // ── Subscribe — the real flow, always runs when called ────────────────────
+    const subscribe = useCallback(async () => {
         // Guard: only run in browsers that support push
         if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-        // Guard: already subscribed on this device
-        if (localStorage.getItem(SUBSCRIBED_FLAG)) return;
 
         setIsLoading(true);
         setError(null);
@@ -85,20 +84,10 @@ export function usePush(): UsePushReturn {
             const p256dh = arrayBufferToBase64(subscription.getKey("p256dh")!);
             const auth = arrayBufferToBase64(subscription.getKey("auth")!);
 
-            // 5. Send to backend with Bearer token
-            const token = tokenStore.get()?.accessToken;
-            const res = await fetch("/v1/notifications/subscribe", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token ?? ""}`,
-                },
-                body: JSON.stringify({ endpoint, p256dh, auth }),
-            });
+            // 5. Send to backend
+            await api.post("/notifications/subscribe", { endpoint, p256dh, auth });
 
-            if (!res.ok) throw new Error(`Subscribe failed: ${res.status}`);
-
-            // 6. Mark as subscribed so we never call this flow again on this device
+            // 6. Mark as subscribed so the first-login flow never re-prompts on this device
             localStorage.setItem(SUBSCRIBED_FLAG, "1");
             setIsSubscribed(true);
         } catch (err: unknown) {
@@ -107,6 +96,12 @@ export function usePush(): UsePushReturn {
             setIsLoading(false);
         }
     }, []);
+
+    // ── Subscribe — called once after first-device login, skips if already tried ──
+    const subscribeOnFirstLogin = useCallback(async () => {
+        if (localStorage.getItem(SUBSCRIBED_FLAG)) return;
+        await subscribe();
+    }, [subscribe]);
 
     // ── Explicit opt-out ──────────────────────────────────────────────────────
     const unsubscribe = useCallback(async () => {
@@ -119,11 +114,7 @@ export function usePush(): UsePushReturn {
             await subscription?.unsubscribe();
 
             // Remove from backend
-            const token = tokenStore.get()?.accessToken;
-            await fetch("/v1/notifications/subscribe", {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token ?? ""}` },
-            });
+            await api.delete("/notifications/subscribe");
 
             localStorage.removeItem(SUBSCRIBED_FLAG);
             setIsSubscribed(false);
@@ -134,5 +125,5 @@ export function usePush(): UsePushReturn {
         }
     }, []);
 
-    return { isSubscribed, permission, isLoading, error, subscribeOnFirstLogin, unsubscribe };
+    return { isSubscribed, permission, isLoading, error, subscribeOnFirstLogin, subscribe, unsubscribe };
 }

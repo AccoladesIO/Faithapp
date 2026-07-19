@@ -2,11 +2,15 @@ import { Plus_Jakarta_Sans, Outfit, Sacramento, Tangerine } from "next/font/goog
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/context/auth-context";
+import { ProfileProvider } from "@/context/profile-context";
 import { StandaloneGate } from "@/components/pwa/standalone-gate";
 
+const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME ?? "Discovery Hub";
+const CHURCH_NAME = process.env.NEXT_PUBLIC_CHURCH_NAME ?? "RCCG Discovery Centre";
+
 export const metadata: Metadata = {
-  title: "Discovery Hub by RCCGDC",
-  description: "Discovery Hub by RCCGDC for church members, events, and community engagement.",
+  title: `${PRODUCT_NAME} by ${CHURCH_NAME}`,
+  description: `${PRODUCT_NAME} by ${CHURCH_NAME} for church members, events, and community engagement.`,
   manifest: "/manifest.json",
   icons: {
     icon: "/image.png",
@@ -63,7 +67,9 @@ export default function RootLayout({
     >
       <body className="min-h-full font-body bg-slate-50 text-slate-900 w-full mx-auto">
         <AuthProvider>
-          <StandaloneGate>{children}</StandaloneGate>
+          <ProfileProvider>
+            <StandaloneGate>{children}</StandaloneGate>
+          </ProfileProvider>
         </AuthProvider>
       </body>
     </html>

@@ -1,18 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowDownToLine, Share2, Plus, MoreHorizontal } from "lucide-react";
+import { ArrowDownToLine, Share2, Plus, MoreHorizontal, BellRing } from "lucide-react";
+import { detectPlatform, type Platform } from "@/lib/platform";
 
-type Platform = "ios" | "android-chrome" | "desktop" | "other";
-
-function detectPlatform(): Platform {
-    const ua = navigator.userAgent;
-    const ios = /iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream;
-    if (ios) return "ios";
-    if (/Android/.test(ua)) return "android-chrome";
-    if (/Win|Mac|Linux/.test(ua)) return "desktop";
-    return "other";
-}
+const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME ?? "Discovery Hub";
+const CHURCH_NAME = process.env.NEXT_PUBLIC_CHURCH_NAME ?? "RCCG Discovery Centre";
 
 interface BeforeInstallPromptEvent extends Event {
     prompt: () => Promise<void>;
@@ -71,13 +64,13 @@ export default function InstallWall() {
                 <div className="text-center space-y-4">
                     <div>
                         <h1 className="text-2xl font-light tracking-tight text-[#121212]">
-                            Discovery Hub
+                            {PRODUCT_NAME}
                         </h1>
-                        <p className="text-[10px] uppercase tracking-widest text-[#8A817C] font-semibold mt-1">
+                        <p className="text-[10px] uppercase tracking-widest text-[#756E69] font-semibold mt-1">
                             BY
                         </p>
-                        <p className="text-[10px] uppercase tracking-widest text-[#8A817C] font-semibold mt-1">
-                            RCCG Discovery Centre
+                        <p className="text-[10px] uppercase tracking-widest text-[#756E69] font-semibold mt-1">
+                            {CHURCH_NAME}
                         </p>
                     </div>
                 </div>
@@ -86,8 +79,15 @@ export default function InstallWall() {
                     <h2 className="text-lg font-normal text-[#121212] tracking-tight">
                         Install to get started
                     </h2>
-                    <p className="text-xs text-[#8A817C] font-light leading-relaxed">
-                        Discovery Hub runs as an installed app on your device. It only takes a moment to set up.
+                    <p className="text-xs text-[#756E69] font-light leading-relaxed">
+                        {PRODUCT_NAME} runs as an installed app on your device. It only takes a moment to set up.
+                    </p>
+                </div>
+
+                <div className="flex items-start gap-2.5 bg-white border border-[#121212]/5 rounded-xl p-3.5">
+                    <BellRing size={15} className="text-[#756E69] flex-shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-gray-600 font-light leading-relaxed text-left">
+                        Once installed, you can turn on notifications for prayer reminders, service updates and announcements.
                     </p>
                 </div>
 
@@ -104,7 +104,7 @@ export default function InstallWall() {
 
                 {showManualIos && (
                     <div className="bg-white border border-[#121212]/5 rounded-2xl p-5 shadow-sm space-y-4">
-                        <p className="text-[10px] uppercase tracking-widest text-[#8A817C] font-semibold">
+                        <p className="text-[10px] uppercase tracking-widest text-[#756E69] font-semibold">
                             How to install on iPhone / iPad
                         </p>
                         <ol className="space-y-3">
@@ -118,12 +118,12 @@ export default function InstallWall() {
                             ))}
                         </ol>
                         <div className="flex items-center justify-center gap-4 pt-2 border-t border-[#121212]/5">
-                            <div className="flex items-center gap-1.5 text-[#8A817C]">
+                            <div className="flex items-center gap-1.5 text-[#756E69]">
                                 <Share2 size={16} />
                                 <span className="text-[10px] font-semibold uppercase tracking-wider">Share</span>
                             </div>
                             <span className="text-gray-300 text-xs">→</span>
-                            <div className="flex items-center gap-1.5 text-[#8A817C]">
+                            <div className="flex items-center gap-1.5 text-[#756E69]">
                                 <Plus size={16} />
                                 <span className="text-[10px] font-semibold uppercase tracking-wider">Add to Home</span>
                             </div>
@@ -133,7 +133,7 @@ export default function InstallWall() {
 
                 {showManualOther && (
                     <div className="bg-white border border-[#121212]/5 rounded-2xl p-5 shadow-sm space-y-4">
-                        <p className="text-[10px] uppercase tracking-widest text-[#8A817C] font-semibold">
+                        <p className="text-[10px] uppercase tracking-widest text-[#756E69] font-semibold">
                             How to install
                         </p>
                         <ol className="space-y-3">
@@ -151,12 +151,12 @@ export default function InstallWall() {
 
                 <div className="flex items-center gap-3">
                     <div className="flex-1 h-px bg-[#121212]/5" />
-                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">or</span>
+                    <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">or</span>
                     <div className="flex-1 h-px bg-[#121212]/5" />
                 </div>
 
                 <div className="text-center">
-                    <p className="text-xs text-gray-400 font-light">
+                    <p className="text-xs text-gray-500 font-light">
                         Already installed?
                     </p>
                     <button
@@ -168,8 +168,8 @@ export default function InstallWall() {
                 </div>
             </div>
 
-            <p className="text-[10px] text-gray-400 font-light text-center tracking-wide">
-                © {new Date().getFullYear()} RCCG Discovery Centre
+            <p className="text-[10px] text-gray-500 font-light text-center tracking-wide">
+                © {new Date().getFullYear()} {CHURCH_NAME}
             </p>
         </div>
     );

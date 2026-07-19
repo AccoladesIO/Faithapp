@@ -50,6 +50,16 @@ export interface CheckinRecord {
     flagged: boolean;
 }
 
+export interface ActiveCheckIn {
+    id: string;
+    child: { id: string; firstname: string; lastname: string; classGroup: ClassGroup | null };
+    droppedOffByName: string | null;
+    checkinTime: string;
+    pickupCode: string;
+    flagReason: string | null;
+    serviceSlot: { id: string; name: string } | null;
+}
+
 export interface CheckinResult {
     id: string;
     pickupCode: string;
@@ -128,6 +138,10 @@ export interface UseChildrenChurchReturn {
     verifyPickupCode: (code: string) => Promise<VerifyResult>;
     checkout: (payload: CheckoutPayload) => Promise<void>;
     flagCheckin: (checkinId: string) => Promise<void>;
+
+    // roster search & active board
+    searchChildren: (name?: string, classGroupId?: string, page?: number) => Promise<{ data: Child[]; totalPages: number; totalCount: number }>;
+    getActiveCheckIns: (classGroupId?: string) => Promise<ActiveCheckIn[]>;
 
     refetch: () => void;
 }
@@ -270,6 +284,25 @@ export function useChildrenChurch(memberId?: string): UseChildrenChurchReturn {
         await api.patch(`/children-church/checkin/${checkinId}/flag`);
     }, []);
 
+    // ── Roster search & active board ─────────────────────────────────────────
+    const searchChildren = useCallback(async (
+        name?: string, classGroupId?: string, page = 1
+    ): Promise<{ data: Child[]; totalPages: number; totalCount: number }> => {
+        const params = new URLSearchParams({ page: String(page), limit: "20" });
+        if (name) params.set("name", name);
+        if (classGroupId) params.set("classGroupId", classGroupId);
+        const res = await api.get<{ data: { data: Child[]; totalPages: number; totalCount: number } }>(
+            `/children-church/children?${params.toString()}`
+        );
+        return res.data.data;
+    }, []);
+
+    const getActiveCheckIns = useCallback(async (classGroupId?: string): Promise<ActiveCheckIn[]> => {
+        const params = classGroupId ? `?classGroupId=${classGroupId}` : "";
+        const res = await api.get<{ data: ActiveCheckIn[] }>(`/children-church/checkin/active${params}`);
+        return res.data.data;
+    }, []);
+
     const refetch = useCallback(() => setFetchTick((t) => t + 1), []);
 
     return {
@@ -278,6 +311,7 @@ export function useChildrenChurch(memberId?: string): UseChildrenChurchReturn {
         createChild, updateChild, getChild, getCheckinHistory,
         addGuardian, getGuardians, deleteGuardian,
         checkin, verifyPickupCode, checkout, flagCheckin,
+        searchChildren, getActiveCheckIns,
         refetch,
     };
 }

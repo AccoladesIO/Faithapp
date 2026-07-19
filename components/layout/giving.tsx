@@ -1,27 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import {
     HeartHandshake, ShieldCheck, CheckCircle2, AlertCircle, Loader2,
     Landmark, History, Copy, Check, Upload, FileText, Download,
-    Briefcase, X, Building2, ChevronDown,
+    Briefcase, X, Building2, ChevronDown, Target,
     ArrowLeft,
 } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
 import { useTithes, ProofStatus } from "@/hooks/use-tithes";
 import { useFinanceRequests, FinanceRequestStatus } from "@/hooks/use-finance-requests";
+import { PledgesSection } from "@/components/layout/giving-pledges";
 import { useRouter } from "next/navigation";
-
+import { formatCurrency } from "@/utils/currency";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatNaira(amount: string | number): string {
-    const n = typeof amount === "string" ? parseFloat(amount) : amount;
-    return `₦${n.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 function formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    return new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function currentMonthValue(): string {
@@ -56,13 +53,13 @@ function CopyField({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between py-2">
             <div>
-                <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">{label}</p>
+                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">{label}</p>
                 <p className="text-sm font-medium text-[#121212] mt-0.5">{value}</p>
             </div>
             <button
                 type="button"
                 onClick={handleCopy}
-                className="p-2 text-[#8A817C] hover:text-[#121212] hover:bg-[#F4F1EA] rounded-lg transition-colors"
+                className="p-2 text-[#756E69] hover:text-[#121212] hover:bg-[#F4F1EA] rounded-lg transition-colors"
             >
                 {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
             </button>
@@ -99,13 +96,13 @@ function VirtualAccountCard() {
         return (
             <div className="bg-[#F4F1EA]/50 rounded-2xl p-5 border border-[#121212]/5">
                 <div className="flex items-center gap-2 mb-1">
-                    <Building2 size={14} className="text-[#8A817C]" />
-                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                    <Building2 size={14} className="text-[#756E69]" />
+                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
                         Your Dedicated Giving Account
                     </span>
                 </div>
                 <p className="text-xs text-gray-500 font-light mb-2">
-                    Transfer to this account anytime — it's reserved just for you.
+                    Transfer to this account anytime — it&apos;s reserved just for you.
                 </p>
                 <div className="divide-y divide-[#121212]/5">
                     <CopyField label="Bank" value={virtualAccount.bankName} />
@@ -120,7 +117,7 @@ function VirtualAccountCard() {
         <div className="bg-[#F4F1EA]/50 rounded-2xl p-5 border border-[#121212]/5">
             {!showBvnForm ? (
                 <div className="text-center py-2">
-                    <Building2 size={20} className="text-[#8A817C] mx-auto mb-2" />
+                    <Building2 size={20} className="text-[#756E69] mx-auto mb-2" />
                     <h4 className="text-sm font-medium text-[#121212] mb-1">Set Up Your Giving Account</h4>
                     <p className="text-xs text-gray-500 font-light mb-4">
                         Get a dedicated bank account number for tithes and offerings.
@@ -132,13 +129,13 @@ function VirtualAccountCard() {
                     >
                         Generate Account
                     </button> */}
-                    <p className="text-xs text-gray-400 font-light"> Coming soon!
+                    <p className="text-xs text-gray-500 font-light"> Coming soon!
                     </p>
                 </div>
             ) : (
                 <form onSubmit={handleCreate} className="space-y-3">
                     <div>
-                        <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
+                        <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">
                             Bank Verification Number (BVN)
                         </label>
                         <input
@@ -180,7 +177,7 @@ function VirtualAccountCard() {
 
 // ─── Proof of payment form ───────────────────────────────────────────────────
 
-function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string; bankName: string }[] }) {
+function ProofOfPaymentForm({ accounts }: { accounts: { id: string; accountName: string; bankName: string }[] }) {
     const { isSubmittingProof, proofError, submitProof } = useTithes();
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState<File | null>(null);
@@ -218,7 +215,7 @@ function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string
                 <button
                     type="button"
                     onClick={() => setOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#8A817C] hover:border-[#121212]/20 hover:text-[#121212] transition-all"
+                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#756E69] hover:border-[#121212]/20 hover:text-[#121212] transition-all"
                 >
                     <Upload size={14} /> Already Paid? Submit Proof
                 </button>
@@ -228,17 +225,17 @@ function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string
                         <h3 className="text-sm font-semibold uppercase tracking-wider text-[#121212]">
                             Submit Proof of Payment
                         </h3>
-                        <button type="button" onClick={() => setOpen(false)} className="text-gray-400 hover:text-[#121212]">
+                        <button type="button" onClick={() => setOpen(false)} className="text-gray-500 hover:text-[#121212]">
                             <X size={16} />
                         </button>
                     </div>
 
                     <div>
-                        <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
+                        <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">
                             Receipt (Image or PDF, max 2MB)
                         </label>
                         <label className="flex items-center gap-2 w-full bg-[#F9F9F9] border border-dashed border-[#121212]/15 rounded-xl px-3 py-3 text-xs cursor-pointer hover:border-[#121212]/30 transition-colors">
-                            <FileText size={14} className="text-[#8A817C] flex-shrink-0" />
+                            <FileText size={14} className="text-[#756E69] flex-shrink-0" />
                             <span className="truncate text-gray-500">{file ? file.name : "Choose a file…"}</span>
                             <input
                                 type="file"
@@ -251,7 +248,7 @@ function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string
                     </div>
 
                     <div>
-                        <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
+                        <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">
                             Account Paid Into
                         </label>
                         <select
@@ -262,14 +259,14 @@ function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string
                         >
                             <option value="">-- Select account --</option>
                             {accounts.map((a) => (
-                                <option key={a.id} value={a.id}>{a.name} — {a.bankName}</option>
+                                <option key={a.id} value={a.id}>{a.accountName} — {a.bankName}</option>
                             ))}
                         </select>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Amount</label>
+                            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Amount</label>
                             <input
                                 type="number"
                                 required
@@ -282,7 +279,7 @@ function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string
                             />
                         </div>
                         <div>
-                            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Payment Date</label>
+                            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Payment Date</label>
                             <input
                                 type="date"
                                 required
@@ -294,7 +291,7 @@ function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string
                     </div>
 
                     <div>
-                        <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
+                        <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">
                             Transaction Reference
                         </label>
                         <input
@@ -323,17 +320,17 @@ function ProofOfPaymentForm({ accounts }: { accounts: { id: string; name: string
     );
 }
 
-// ─── Statement download ───────────────────────────────────────────────────────
+// ─── Tithe statement email ──────────────────────────────────────────────────
 
-function StatementDownload() {
-    const { isDownloading, downloadStatement } = useTithes();
+function TitheStatementEmail() {
+    const { isSendingStatement, emailTitheStatement } = useTithes();
     const [fromMonth, setFromMonth] = useState(currentMonthValue());
     const [toMonth, setToMonth] = useState(currentMonthValue());
     const [message, setMessage] = useState<string | null>(null);
 
-    const handleDownload = async () => {
+    const handleSend = async () => {
         try {
-            const msg = await downloadStatement(fromMonth, toMonth);
+            const msg = await emailTitheStatement(fromMonth, toMonth);
             setMessage(msg);
             setTimeout(() => setMessage(null), 4000);
         } catch {
@@ -344,14 +341,14 @@ function StatementDownload() {
     return (
         <div className="bg-white border border-[#121212]/5 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-                <Download size={14} className="text-[#8A817C]" />
+                <Download size={14} className="text-[#756E69]" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-[#121212]">
-                    Email My Statement
+                    Email My Tithe Statement
                 </span>
             </div>
             <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1">From</label>
+                    <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">From</label>
                     <input
                         type="month"
                         value={fromMonth}
@@ -360,7 +357,7 @@ function StatementDownload() {
                     />
                 </div>
                 <div>
-                    <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1">To</label>
+                    <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1">To</label>
                     <input
                         type="month"
                         value={toMonth}
@@ -373,11 +370,11 @@ function StatementDownload() {
             {message && <p className="text-xs text-green-600 mb-2">{message}</p>}
             <button
                 type="button"
-                onClick={handleDownload}
-                disabled={isDownloading}
+                onClick={handleSend}
+                disabled={isSendingStatement}
                 className="w-full bg-[#F4F1EA] text-[#121212] text-xs uppercase tracking-widest font-semibold py-2.5 rounded-xl hover:bg-[#EADCC9] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-                {isDownloading ? <Loader2 size={12} className="animate-spin" /> : null}
+                {isSendingStatement ? <Loader2 size={12} className="animate-spin" /> : null}
                 Send to My Email
             </button>
         </div>
@@ -419,13 +416,13 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-[#121212]">
                     New Finance Request
                 </h3>
-                <button type="button" onClick={onClose} className="text-gray-400 hover:text-[#121212]">
+                <button type="button" onClick={onClose} className="text-gray-500 hover:text-[#121212]">
                     <X size={16} />
                 </button>
             </div>
 
             <div>
-                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Category</label>
+                <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Category</label>
                 <select
                     required
                     value={categoryId}
@@ -440,7 +437,7 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
             </div>
 
             <div>
-                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Reason</label>
+                <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Reason</label>
                 <textarea
                     required
                     rows={2}
@@ -452,7 +449,7 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
             </div>
 
             <div>
-                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Amount</label>
+                <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Amount</label>
                 <input
                     type="number"
                     required
@@ -467,7 +464,7 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
 
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Bank Name</label>
+                    <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Bank Name</label>
                     <input
                         type="text"
                         required
@@ -478,7 +475,7 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
                     />
                 </div>
                 <div>
-                    <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Account Number</label>
+                    <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Account Number</label>
                     <input
                         type="text"
                         required
@@ -491,7 +488,7 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
             </div>
 
             <div>
-                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">Recipient Account Name</label>
+                <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">Recipient Account Name</label>
                 <input
                     type="text"
                     required
@@ -503,11 +500,11 @@ function FinanceRequestForm({ departmentId, onClose }: { departmentId: string; o
             </div>
 
             <div>
-                <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
+                <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-1.5">
                     Attachment (Optional — budget/invoice)
                 </label>
                 <label className="flex items-center gap-2 w-full bg-[#F9F9F9] border border-dashed border-[#121212]/15 rounded-xl px-3 py-3 text-xs cursor-pointer hover:border-[#121212]/30 transition-colors">
-                    <FileText size={14} className="text-[#8A817C] flex-shrink-0" />
+                    <FileText size={14} className="text-[#756E69] flex-shrink-0" />
                     <span className="truncate text-gray-500">{attachment ? attachment.name : "Choose a file…"}</span>
                     <input
                         type="file"
@@ -543,7 +540,7 @@ export const GivingPage = () => {
     const { accounts, history, proofs, isLoading, error } = useTithes();
     const { requests, isLoading: financeLoading } = useFinanceRequests();
 
-    const [activeTab, setActiveTab] = useState<"give" | "finance">("give");
+    const [activeTab, setActiveTab] = useState<"give" | "pledges" | "finance">("give");
     const [showFinanceForm, setShowFinanceForm] = useState(false);
 
     return (
@@ -551,15 +548,18 @@ export const GivingPage = () => {
 
             {/* ── Hero ─────────────────────────────────────────────────── */}
             <div className="relative w-full h-[40vh] overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1673042872287-a77ef03317a4?q=80&w=1108&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                <Image
+                    src="/images/giving-backdrop.jpg"
                     alt="Giving backdrop"
-                    className="w-full h-full object-cover"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute top-4 left-4 z-10">
                     <button
-                        onClick={() => router.push("/")}
+                        onClick={() => router.back()}
                         className="p-2.5 bg-black/25 backdrop-blur-md hover:bg-black/40 text-white rounded-full transition-colors border border-white/10"
                         aria-label="Back to home"
                     >
@@ -576,25 +576,31 @@ export const GivingPage = () => {
                 </div>
             </div>
 
-            {/* ── Tab switch (workers only) ──────────────────────────────── */}
-            {isWorker && (
-                <div className="px-6 mt-6 max-w-md mx-auto">
-                    <div className="flex bg-[#F4F1EA] p-1 rounded-xl">
-                        <button
-                            onClick={() => setActiveTab("give")}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${activeTab === "give" ? "bg-[#121212] text-white" : "text-[#8A817C] hover:text-[#121212]"}`}
-                        >
-                            <HeartHandshake size={13} /> Give
-                        </button>
+            {/* ── Tab switch ─────────────────────────────────────────────── */}
+            <div className="px-6 mt-6 max-w-md mx-auto">
+                <div className="flex bg-[#F4F1EA] p-1 rounded-xl">
+                    <button
+                        onClick={() => setActiveTab("give")}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${activeTab === "give" ? "bg-[#121212] text-white" : "text-[#756E69] hover:text-[#121212]"}`}
+                    >
+                        <HeartHandshake size={13} /> Give
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("pledges")}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${activeTab === "pledges" ? "bg-[#121212] text-white" : "text-[#756E69] hover:text-[#121212]"}`}
+                    >
+                        <Target size={13} /> Pledges
+                    </button>
+                    {isWorker && (
                         <button
                             onClick={() => setActiveTab("finance")}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${activeTab === "finance" ? "bg-[#121212] text-white" : "text-[#8A817C] hover:text-[#121212]"}`}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${activeTab === "finance" ? "bg-[#121212] text-white" : "text-[#756E69] hover:text-[#121212]"}`}
                         >
                             <Briefcase size={13} /> Finance Requests
                         </button>
-                    </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* ── GIVE TAB ───────────────────────────────────────────────── */}
             {activeTab === "give" && (
@@ -612,28 +618,28 @@ export const GivingPage = () => {
                     {/* Proof of payment */}
                     <ProofOfPaymentForm accounts={accounts} />
 
-                    {/* Statement download */}
-                    <StatementDownload />
+                    {/* Tithe statement email */}
+                    <TitheStatementEmail />
 
-                    {/* <p className="text-[11px] text-gray-400 font-light text-center flex items-center justify-center gap-1">
+                    {/* <p className="text-[11px] text-gray-500 font-light text-center flex items-center justify-center gap-1">
                         <ShieldCheck size={12} className="text-green-600" /> Bank-grade processing • Secure Ledger
                     </p> */}
 
                     {/* Pending proofs */}
                     {proofs.length > 0 && (
                         <div className="space-y-3">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest px-1">
                                 Submitted Proofs
                             </span>
                             {proofs.map((p) => (
                                 <div key={p.id} className="bg-white border border-[#121212]/5 p-4 shadow-sm flex items-center justify-between">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <h4 className="text-sm font-medium text-[#121212]">{formatNaira(p.amount)}</h4>
+                                            <h4 className="text-sm font-medium text-[#121212]">{formatCurrency(p.amount)}</h4>
                                             <StatusPill status={p.status} />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 font-light mt-0.5">
-                                            Submitted {formatDate(p.submittedAt)}
+                                        <p className="text-[10px] text-gray-500 font-light mt-0.5">
+                                            Submitted {formatDate(p.createdAt)}
                                         </p>
                                     </div>
                                 </div>
@@ -644,7 +650,7 @@ export const GivingPage = () => {
                     {/* History */}
                     <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
                                 <History size={12} /> Tithe History
                             </span>
                         </div>
@@ -656,30 +662,39 @@ export const GivingPage = () => {
                                 ))}
                             </div>
                         ) : history.length === 0 ? (
-                            <p className="text-sm text-gray-400 font-light py-6 text-center">No giving records yet.</p>
+                            <p className="text-sm text-gray-500 font-light py-6 text-center">No giving records yet.</p>
                         ) : (
                             <div className="space-y-2.5">
                                 {history.map((log) => (
                                     <div key={log.id} className="bg-white border border-[#121212]/5 p-4 shadow-sm flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-[#F4F1EA] flex items-center justify-center text-[#8A817C]">
+                                            <div className="w-10 h-10 bg-[#F4F1EA] flex items-center justify-center text-[#756E69]">
                                                 <Landmark size={18} />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-medium text-[#121212]">{log.account.name}</h4>
-                                                <p className="text-[10px] text-gray-400 font-light mt-0.5">
-                                                    {formatDate(log.transactionDate)}
+                                                <h4 className="text-sm font-medium text-[#121212]">
+                                                    {log.batch?.titheAccount?.accountName ?? log.bankName ?? "Manual Payment"}
+                                                </h4>
+                                                <p className="text-[10px] text-gray-500 font-light mt-0.5">
+                                                    {formatDate(log.paymentDate)}
                                                 </p>
                                             </div>
                                         </div>
                                         <span className="text-sm font-bold text-[#121212]">
-                                            +{formatNaira(log.amount)}
+                                            +{formatCurrency(log.amount)}
                                         </span>
                                     </div>
                                 ))}
                             </div>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* ── PLEDGES TAB ────────────────────────────────────────────── */}
+            {activeTab === "pledges" && (
+                <div className="px-6 mt-8 max-w-md mx-auto">
+                    <PledgesSection />
                 </div>
             )}
 
@@ -692,7 +707,7 @@ export const GivingPage = () => {
                             type="button"
                             onClick={() => setShowFinanceForm(true)}
                             disabled={!departmentId}
-                            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#8A817C] hover:border-[#121212]/20 hover:text-[#121212] transition-all disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#121212]/10 rounded-xl text-xs font-semibold uppercase tracking-widest text-[#756E69] hover:border-[#121212]/20 hover:text-[#121212] transition-all disabled:opacity-50"
                         >
                             <Briefcase size={14} /> New Finance Request
                         </button>
@@ -701,7 +716,7 @@ export const GivingPage = () => {
                     ) : null}
 
                     <div className="space-y-3">
-                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest px-1">
                             My Requests
                         </span>
 
@@ -712,7 +727,7 @@ export const GivingPage = () => {
                                 ))}
                             </div>
                         ) : requests.length === 0 ? (
-                            <p className="text-sm text-gray-400 font-light py-6 text-center">No finance requests yet.</p>
+                            <p className="text-sm text-gray-500 font-light py-6 text-center">No finance requests yet.</p>
                         ) : (
                             <div className="space-y-2.5">
                                 {requests.map((req) => (
@@ -722,10 +737,10 @@ export const GivingPage = () => {
                                                 <h4 className="text-sm font-medium text-[#121212]">{req.category.name}</h4>
                                                 <StatusPill status={req.status} />
                                             </div>
-                                            <span className="text-sm font-bold text-[#121212]">{formatNaira(req.amount)}</span>
+                                            <span className="text-sm font-bold text-[#121212]">{formatCurrency(req.amount)}</span>
                                         </div>
                                         <p className="text-xs text-gray-500 font-light line-clamp-2 mb-1">{req.reason}</p>
-                                        <p className="text-[10px] text-gray-400 font-light">
+                                        <p className="text-[10px] text-gray-500 font-light">
                                             {req.department.name} • {formatDate(req.createdAt)}
                                         </p>
                                     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import {
     Calendar as CalendarIcon,
     Clock,
@@ -8,14 +9,17 @@ import {
     AlertCircle,
     CheckCircle2,
     Flame,
-    Award,
+    BarChart3,
     RefreshCw,
+    Info,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
     useAttendanceHistory,
     AttendanceRecord,
     AttendanceStatus,
 } from "@/hooks/use-attendance-history";
+import { getAttendanceRateStyle } from "@/utils/attendance-rate-style";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -115,7 +119,7 @@ function AttendanceCard({ record }: { record: AttendanceRecord }) {
                 </div>
 
                 <div className="space-y-0.5">
-                    <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400">{eventType}</span>
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500">{eventType}</span>
                     <h3 className="text-sm font-medium text-[#121212] leading-snug">{title}</h3>
                     {subtitle && <p className="text-xs text-gray-500 font-light">{subtitle}</p>}
                 </div>
@@ -124,7 +128,7 @@ function AttendanceCard({ record }: { record: AttendanceRecord }) {
             <div className="flex flex-col items-end justify-between self-stretch min-w-[85px] text-right">
                 <StatusBadge status={record.status} />
                 {record.checkinTime && (
-                    <span className="text-[10px] text-gray-400 font-light flex items-center justify-end gap-0.5">
+                    <span className="text-[10px] text-gray-500 font-light flex items-center justify-end gap-0.5">
                         <Clock size={10} />
                         {formatCheckinTime(record.checkinTime)}
                     </span>
@@ -156,17 +160,22 @@ function HistorySkeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export const PersonalAttendancePage = () => {
+    const router = useRouter();
     const { records, stats, isLoading, error, refetch } = useAttendanceHistory();
+    const rateStyle = getAttendanceRateStyle(isLoading ? null : stats.attendanceRatePercentage);
 
     return (
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
 
             {/* ── Hero banner ────────────────────────────────────────────── */}
             <div className="relative w-full h-[40vh] md:h-[40vh] overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                <Image
+                    src="/images/attendance-backdrop.jpg"
                     alt="Sanctuary atmosphere"
-                    className="w-full h-full object-cover"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/40" />
                 <div className="absolute bottom-0 inset-x-0 p-6 ">
@@ -181,44 +190,79 @@ export const PersonalAttendancePage = () => {
 
             {/* ── Stats block ────────────────────────────────────────────── */}
             <div className="px-6 pb-6 border-b border-[#121212]/5 bg-[#F9F9F9] mt-3">
-                <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white p-4 border border-[#121212]/5 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold flex items-center gap-1">
-                            <Flame size={10} className="text-orange-500" /> Streak
-                        </span>
-                        <span className="text-2xl font-semibold tracking-tight mt-1">
-                            {isLoading ? "—" : stats.attendanceStreak}{" "}
-                            <span className="text-xs text-gray-400 font-light font-sans">wks</span>
-                        </span>
+                <div className="grid grid-cols-3 gap-2.5">
+                    <div className="bg-orange-50/60 p-3 border border-orange-100 shadow-sm flex flex-col items-center text-center gap-1.5">
+                        <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                            <Flame size={14} className="text-orange-500" />
+                        </div>
+                        <p className="text-xl font-semibold tracking-tight leading-none text-[#121212]">
+                            {isLoading ? "—" : stats.attendanceStreak}
+                            {!isLoading && <span className="text-[10px] text-gray-500 font-normal ml-0.5">wks</span>}
+                        </p>
+                        <p className="text-[9px] uppercase tracking-wider text-gray-500 font-semibold leading-tight">
+                            Streak
+                        </p>
                     </div>
 
-                    <div className="bg-white p-4 border border-[#121212]/5 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold flex items-center gap-1">
-                            <Award size={10} className="text-[#8A817C]" /> Total
-                        </span>
-                        <span className="text-2xl font-semibold tracking-tight mt-1">
-                            {isLoading ? "—" : stats.presentCount}{" "}
-                            <span className="text-xs text-gray-400 font-light font-sans">logs</span>
-                        </span>
+                    <div className="bg-green-50/60 p-3 border border-green-100 shadow-sm flex flex-col items-center text-center gap-1.5">
+                        <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                            <CheckCircle2 size={14} className="text-green-600" />
+                        </div>
+                        <p className="text-xl font-semibold tracking-tight leading-none text-[#121212]">
+                            {isLoading ? "—" : stats.presentCount}
+                        </p>
+                        <p className="text-[9px] uppercase tracking-wider text-gray-500 font-semibold leading-tight">
+                            Present
+                        </p>
                     </div>
 
-                    <div className="bg-white p-4 border border-[#121212]/5 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Consistency</span>
-                        <span className="text-2xl font-semibold tracking-tight text-[#8A817C] mt-1">
+                    <div className={`${rateStyle.bg} p-3 border ${rateStyle.border} shadow-sm flex flex-col items-center text-center gap-1.5 transition-colors duration-500`}>
+                        <div className={`relative w-8 h-8 flex items-center justify-center flex-shrink-0 ${rateStyle.ring}`}>
+                            <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeOpacity="0.15" strokeWidth="3" />
+                                <circle
+                                    cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="3"
+                                    strokeLinecap="round"
+                                    strokeDasharray={2 * Math.PI * 16}
+                                    strokeDashoffset={2 * Math.PI * 16 * (1 - (isLoading ? 0 : stats.attendanceRatePercentage / 100))}
+                                    className="transition-all duration-500"
+                                />
+                            </svg>
+                            <div className="w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                <BarChart3 size={10} className={rateStyle.icon} />
+                            </div>
+                        </div>
+                        <p className="text-xl font-semibold tracking-tight leading-none text-[#121212]">
                             {isLoading ? "—" : `${stats.attendanceRatePercentage}%`}
-                        </span>
+                        </p>
+                        <p className="text-[9px] uppercase tracking-wider text-gray-500 font-semibold leading-tight">
+                            Attendance Rate
+                        </p>
                     </div>
                 </div>
+
+                {!isLoading && (
+                    <div className="flex items-start gap-1.5 mt-3 text-[10px] text-gray-500 font-light leading-relaxed">
+                        <Info size={11} className="mt-0.5 flex-shrink-0" />
+                        <span>
+                            Based on your last {records.length} check-in{records.length === 1 ? "" : "s"} only — not your full history.
+                            {" "}For your all-time attendance %, streak, and rank, see{" "}
+                            <button onClick={() => router.push("/dashboard")} className="underline text-[#121212] font-medium">
+                                My Stats
+                            </button>.
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* ── History list ───────────────────────────────────────────── */}
             <div className="px-6 mt-8 space-y-4">
                 <div className="flex justify-between items-center px-1">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
                         Check-in History
                     </span>
                     {stats.lastCheckedInDate && !isLoading && (
-                        <span className="text-xs text-gray-400 font-light">
+                        <span className="text-xs text-gray-500 font-light">
                             Last log: {formatLastCheckinDate(stats.lastCheckedInDate)}
                         </span>
                     )}
@@ -227,14 +271,14 @@ export const PersonalAttendancePage = () => {
                 {isLoading ? (
                     <HistorySkeleton />
                 ) : error ? (
-                    <div className="flex flex-col items-start gap-3 py-10 text-gray-400">
+                    <div className="flex flex-col items-start gap-3 py-10 text-gray-500">
                         <p className="text-sm font-light">{error}</p>
                         <button onClick={refetch} className="flex items-center gap-1.5 text-xs font-semibold text-[#121212] hover:underline">
                             <RefreshCw size={12} /> Retry
                         </button>
                     </div>
                 ) : records.length === 0 ? (
-                    <p className="text-sm text-gray-400 font-light py-10 text-center">No attendance records yet.</p>
+                    <p className="text-sm text-gray-500 font-light py-10 text-center">No attendance records yet.</p>
                 ) : (
                     <div className="space-y-3">
                         {records.map((record) => (

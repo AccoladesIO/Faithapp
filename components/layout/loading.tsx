@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 
+const CHURCH_NAME = process.env.NEXT_PUBLIC_CHURCH_NAME ?? "RCCG Discovery Centre";
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "2.6";
+
 export const LoadingScreen = () => {
     const [motivationalIndex, setMotivationalIndex] = useState(0);
 
@@ -31,10 +34,10 @@ export const LoadingScreen = () => {
                 </div>
 
                 <div className="text-center space-y-1.5 h-12 flex flex-col justify-center">
-                    <p className="text-xs uppercase tracking-widest text-gray-400 font-bold animate-pulse">
+                    <p className="text-xs uppercase tracking-widest text-gray-500 font-bold animate-pulse">
                         Loading
                     </p>
-                    <p className="text-sm font-light text-[#8A817C] transition-all duration-500 ease-in-out">
+                    <p className="text-sm font-light text-[#756E69] transition-all duration-500 ease-in-out">
                         {REMINDERS[motivationalIndex]}
                     </p>
                 </div>
@@ -42,10 +45,10 @@ export const LoadingScreen = () => {
 
             <div className="text-center space-y-1">
                 <span className="text-[10px] uppercase tracking-widest text-[#121212]/40 font-semibold block">
-                    RCCG DISCOVERY CENTER Family
+                    {CHURCH_NAME} Family
                 </span>
-                <span className="text-xs font-light tracking-tight text-gray-400 block">
-                    Church Platform v2.6
+                <span className="text-xs font-light tracking-tight text-gray-500 block">
+                    Church Platform v{APP_VERSION}
                 </span>
             </div>
 

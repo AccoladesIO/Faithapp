@@ -1,77 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Eye, EyeOff, Lock, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "@/utils/auth/axios-client";
-
-// ─── Password strength ────────────────────────────────────────────────────────
-
-interface StrengthResult {
-    score: number;    // 0–4
-    label: string;
-    color: string;
-}
-
-function getStrength(password: string): StrengthResult {
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (password.length >= 12) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-
-    const capped = Math.min(score, 4) as 0 | 1 | 2 | 3 | 4;
-    const map: Record<0 | 1 | 2 | 3 | 4, { label: string; color: string }> = {
-        0: { label: "Too weak", color: "bg-red-400" },
-        1: { label: "Weak", color: "bg-red-400" },
-        2: { label: "Fair", color: "bg-amber-400" },
-        3: { label: "Good", color: "bg-blue-400" },
-        4: { label: "Strong", color: "bg-green-500" },
-    };
-    return { score: capped, ...map[capped] };
-}
-
-// ─── Field ────────────────────────────────────────────────────────────────────
-
-function PasswordField({
-    label,
-    value,
-    onChange,
-    placeholder,
-}: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    placeholder?: string;
-}) {
-    const [show, setShow] = useState(false);
-    return (
-        <div>
-            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1.5">
-                {label}
-            </label>
-            <div className="relative rounded-xl border border-[#121212]/10 focus-within:border-[#121212]/30 transition-colors bg-[#F4F1EA]/20">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-                <input
-                    type={show ? "text" : "password"}
-                    required
-                    placeholder={placeholder ?? "••••••••"}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-full bg-transparent pl-11 pr-12 py-3.5 text-sm focus:outline-none"
-                />
-                <button
-                    type="button"
-                    onClick={() => setShow((s) => !s)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                    {show ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-            </div>
-        </div>
-    );
-}
+import { useAuth } from "@/context/auth-context";
+import { PasswordField } from "@/components/ui/password-field";
+import { PasswordStrengthMeter, PasswordRequirements } from "@/components/ui/password-requirements";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -79,6 +15,7 @@ type Status = "idle" | "processing" | "success" | "error";
 
 export default function ChangePasswordPage() {
     const router = useRouter();
+    const { logout } = useAuth();
 
     const [oldPassword, setOld] = useState("");
     const [newPassword, setNew] = useState("");
@@ -86,7 +23,6 @@ export default function ChangePasswordPage() {
     const [status, setStatus] = useState<Status>("idle");
     const [errorMessage, setError] = useState<string | null>(null);
 
-    const strength = getStrength(newPassword);
     const mismatch = confirmPassword.length > 0 && confirmPassword !== newPassword;
     const isProcessing = status === "processing";
     const isSuccess = status === "success";
@@ -124,14 +60,14 @@ export default function ChangePasswordPage() {
                     <div>
                         <h2 className="text-2xl font-light tracking-tight text-[#121212]">Password Updated</h2>
                         <p className="text-sm text-gray-500 font-light mt-2 leading-relaxed">
-                            Your password has been changed successfully. Use your new password the next time you sign in.
+                            Your password has been changed successfully. For your security, you&apos;ll need to sign in again with your new password.
                         </p>
                     </div>
                     <button
-                        onClick={() => router.push("/home")}
+                        onClick={() => logout()}
                         className="w-full bg-[#121212] text-white text-xs uppercase tracking-widest font-semibold py-4 rounded-xl hover:bg-gray-800 transition-colors"
                     >
-                        Continue to Home
+                        Sign In Again
                     </button>
                 </div>
             </div>
@@ -143,10 +79,13 @@ export default function ChangePasswordPage() {
 
             {/* ── Hero ─────────────────────────────────────────────────── */}
             <div className="relative w-full h-[25vh] overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1445108771252-d1cc31a02a3c?q=80&w=1200&auto=format&fit=crop"
+                <Image
+                    src="/images/security-key.jpg"
                     alt="Sanctuary"
-                    className="w-full h-full object-cover"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#FFFFFF] via-[#FFFFFF]/10 to-transparent" />
@@ -178,30 +117,7 @@ export default function ChangePasswordPage() {
                             onChange={setNew}
                             placeholder="At least 8 characters"
                         />
-
-                        {/* Strength meter */}
-                        {newPassword.length > 0 && (
-                            <div className="space-y-1">
-                                <div className="flex gap-1">
-                                    {[1, 2, 3, 4].map((bar) => (
-                                        <div
-                                            key={bar}
-                                            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${bar <= strength.score
-                                                    ? strength.color
-                                                    : "bg-gray-200"
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
-                                <p className={`text-[10px] font-semibold uppercase tracking-wider ${strength.score <= 1 ? "text-red-500" :
-                                        strength.score === 2 ? "text-amber-500" :
-                                            strength.score === 3 ? "text-blue-500" :
-                                                "text-green-600"
-                                    }`}>
-                                    {strength.label}
-                                </p>
-                            </div>
-                        )}
+                        <PasswordStrengthMeter password={newPassword} />
                     </div>
 
                     <div className="space-y-1">
@@ -218,25 +134,7 @@ export default function ChangePasswordPage() {
                         )}
                     </div>
 
-                    {/* Requirements */}
-                    <div className="bg-[#F4F1EA]/50 rounded-xl p-4 space-y-1.5">
-                        <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-2">
-                            Requirements
-                        </p>
-                        {[
-                            ["At least 8 characters", newPassword.length >= 8],
-                            ["One uppercase letter", /[A-Z]/.test(newPassword)],
-                            ["One number", /[0-9]/.test(newPassword)],
-                            ["One special character", /[^A-Za-z0-9]/.test(newPassword)],
-                        ].map(([label, met]) => (
-                            <div key={label as string} className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${met ? "bg-green-500" : "bg-gray-300"}`} />
-                                <span className={`text-xs font-light ${met ? "text-green-700" : "text-gray-400"}`}>
-                                    {label as string}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                    <PasswordRequirements password={newPassword} />
 
                     {status === "error" && errorMessage && (
                         <p className="text-xs text-red-600 font-light bg-red-50 px-3 py-2.5 rounded-xl border border-red-100">
@@ -259,7 +157,7 @@ export default function ChangePasswordPage() {
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="w-full text-xs uppercase tracking-widest font-semibold py-3 text-gray-400 hover:text-[#121212] transition-colors"
+                        className="w-full text-xs uppercase tracking-widest font-semibold py-3 text-gray-500 hover:text-[#121212] transition-colors"
                     >
                         Cancel
                     </button>

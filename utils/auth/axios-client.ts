@@ -1,9 +1,17 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { tokenStore } from "./token-store";
 
+declare module "axios" {
+    interface InternalAxiosRequestConfig {
+        _skipAuth?: boolean;
+    }
+    interface AxiosRequestConfig {
+        _skipAuth?: boolean;
+    }
+}
+
 type RetriableConfig = InternalAxiosRequestConfig & {
     _retry?: boolean;
-    _skipAuth?: boolean;
 };
 
 export type AuthPayload = {
@@ -91,6 +99,26 @@ export const commitAuthPayload = (payload: AuthPayload) => {
     );
 };
 
+// Best-effort backend notification when a session ends here (refresh failed on
+// a 401 retry). Deliberately not importing authService from ./auth — that
+// module imports `api` from this file, so importing it back here would be a
+// circular dependency. This mirrors authService.logout()'s request shape
+// exactly, using the raw axios client (not `api`) to avoid recursing into
+// this same response interceptor.
+const notifyLogoutBestEffort = async (): Promise<void> => {
+    const current = tokenStore.get();
+    if (!current?.accessToken) return;
+    try {
+        await axios.post(
+            `${api.defaults.baseURL}/auth/logout`,
+            {},
+            { headers: { Authorization: `Bearer ${current.accessToken}` } }
+        );
+    } catch {
+        // Best-effort — the access token may already be expired.
+    }
+};
+
 let refreshPromise: Promise<string> | null = null;
 
 const doRefresh = async (): Promise<string> => {
@@ -162,8 +190,10 @@ api.interceptors.response.use(
             } catch (refreshErr) {
                 console.log(
                     `[Auth ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]`,
-                    "❌ Refresh failed on 401 retry — clearing session"
+                    "❌ Refresh failed on 401 retry — logging out"
                 );
+                // Read the access token before clearing — notifyLogoutBestEffort needs it.
+                await notifyLogoutBestEffort();
                 tokenStore.clear();
                 return Promise.reject(new Error("Session expired. Please sign in again."));
             }
