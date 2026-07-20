@@ -37,6 +37,16 @@ export const LoginPage = () => {
 
             setStatus("success");
 
+            if (result.requiresPasswordChange) {
+                // Skip the push-permission prompt here — on a temporary
+                // password the user hasn't landed anywhere yet, and the
+                // native permission dialog firing mid-transition into
+                // change-password made that screen appear to freeze. It
+                // fires normally once they log back in with a real password.
+                router.push("/change-password");
+                return;
+            }
+
             // Subscribe to push notifications on first device login.
             // Runs silently — we don't surface errors to the user here.
             if (result.isFirstDeviceLogin) {
@@ -45,11 +55,7 @@ export const LoginPage = () => {
                 });
             }
 
-            if (result.requiresPasswordChange) {
-                router.push("/change-password");
-            } else {
-                router.push("/home");
-            }
+            router.push("/home");
         } catch (err: unknown) {
             setStatus("error");
             setError(err instanceof Error ? err.message : "Something went wrong.");

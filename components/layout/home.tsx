@@ -14,6 +14,7 @@ import { useMyAssignments } from "@/hooks/use-my-assignments";
 import { useTodaysBirthdays, useSendBirthdayWish, useMyBirthdayWishes, BirthdayMember } from "@/hooks/use-birthdays";
 import { formatLocalSlotTime, formatLocalTime } from "@/utils/parse-local-time";
 import { SLOT_TYPE_LABELS, SLOT_TYPE_ICONS } from "@/utils/slot-type-icons";
+import { Avatar } from "@/components/ui/avatar";
 
 function formatAssignmentDate(iso: string): string {
     return new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" });
@@ -74,11 +75,12 @@ function FeedSkeleton() {
 }
 
 function BirthdayCard({
-    id, name, subtitle, isSent, sendState, onSend,
+    id, name, subtitle, photoUrl, isSent, sendState, onSend,
 }: {
     id: string;
     name: string;
     subtitle: string | null;
+    photoUrl: string | null;
     isSent: boolean;
     sendState: { isSending: boolean; error: string | null };
     onSend: (id: string, message: string) => void;
@@ -89,6 +91,7 @@ function BirthdayCard({
     if (isSent) {
         return (
             <div className="shrink-0 w-fit max-w-56 bg-[#F4F1EA] rounded-2xl p-4 flex items-center gap-2">
+                <Avatar photoUrl={photoUrl} name={name} size={28} textSize="text-[9px]" />
                 <CheckCircle2 size={16} className="text-green-600 flex-shrink-0" />
                 <div className="min-w-0">
                     <p className="text-xs text-[#121212] font-medium truncate">Wish sent to {name}</p>
@@ -100,9 +103,12 @@ function BirthdayCard({
 
     return (
         <div className={`shrink-0 bg-[#F4F1EA] rounded-2xl p-4 ${isOpen ? "w-64" : "w-fit max-w-56"}`}>
-            <p className="text-xs uppercase tracking-widest text-[#756E69] font-bold flex items-center gap-1.5 mb-1 whitespace-nowrap">
-                <Cake size={12} /> Birthday
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+                <Avatar photoUrl={photoUrl} name={name} size={28} textSize="text-[9px]" />
+                <p className="text-xs uppercase tracking-widest text-[#756E69] font-bold flex items-center gap-1.5 whitespace-nowrap">
+                    <Cake size={12} /> Birthday
+                </p>
+            </div>
             <p className="text-sm font-medium text-[#121212] mb-2 truncate">{name}</p>
             {subtitle && <p className="text-[10px] text-gray-500 font-light truncate -mt-1.5 mb-2">{subtitle}</p>}
             {isOpen ? (
@@ -509,6 +515,7 @@ export const HomePage = () => {
                                         id={b.id}
                                         name={`${b.firstname} ${b.lastname}`}
                                         subtitle={isDuplicateName ? celebrantSubtitle(b) : null}
+                                        photoUrl={b.photoUrl}
                                         isSent={sentIds.has(b.id) || b.alreadyWishedByMe}
                                         sendState={{ isSending, error: sendWishError }}
                                         onSend={sendWish}

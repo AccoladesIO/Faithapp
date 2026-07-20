@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/context/auth-context";
 import { ProfileProvider } from "@/context/profile-context";
 import { StandaloneGate } from "@/components/pwa/standalone-gate";
+import { PasswordChangeGate } from "@/components/auth/password-change-gate";
 
 const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME ?? "Discovery Hub";
 const CHURCH_NAME = process.env.NEXT_PUBLIC_CHURCH_NAME ?? "RCCG Discovery Centre";
@@ -68,7 +69,9 @@ export default function RootLayout({
       <body className="min-h-full font-body bg-slate-50 text-slate-900 w-full mx-auto">
         <AuthProvider>
           <ProfileProvider>
-            <StandaloneGate>{children}</StandaloneGate>
+            <StandaloneGate>
+              <PasswordChangeGate>{children}</PasswordChangeGate>
+            </StandaloneGate>
           </ProfileProvider>
         </AuthProvider>
       </body>

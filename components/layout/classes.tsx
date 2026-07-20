@@ -8,11 +8,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
-    useClasses, useClassDetail, useMyEnrollments,
-    CLASS_TYPE_LABELS, ChurchClassType, EnrollmentStatus,
+    useClasses, useClassDetail, useMyEnrollments, useClassTypes,
+    EnrollmentStatus,
 } from "@/hooks/use-classes";
-
-const CLASS_TYPES = Object.keys(CLASS_TYPE_LABELS) as ChurchClassType[];
 
 function formatDate(iso: string | null): string {
     if (!iso) return "—";
@@ -41,6 +39,7 @@ export const ClassesPage = () => {
         classes, isLoading, error, page, totalPages, goToPage, typeFilter, setTypeFilter,
     } = useClasses();
     const { enrollments, isLoading: enrollmentsLoading, error: enrollmentsError } = useMyEnrollments();
+    const { classTypes } = useClassTypes();
 
     return (
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-32 font-sans selection:bg-[#121212] selection:text-[#FFFFFF]">
@@ -100,10 +99,10 @@ export const ClassesPage = () => {
                             className={`shrink-0 text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-full border transition-colors ${!typeFilter ? "bg-[#121212] text-white border-transparent" : "bg-white text-gray-500 border-[#121212]/10"}`}>
                             All
                         </button>
-                        {CLASS_TYPES.map((t) => (
-                            <button key={t} onClick={() => setTypeFilter(t)}
-                                className={`shrink-0 text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap ${typeFilter === t ? "bg-[#121212] text-white border-transparent" : "bg-white text-gray-500 border-[#121212]/10"}`}>
-                                {CLASS_TYPE_LABELS[t]}
+                        {classTypes.map((t) => (
+                            <button key={t.id} onClick={() => setTypeFilter(t.id)}
+                                className={`shrink-0 text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap ${typeFilter === t.id ? "bg-[#121212] text-white border-transparent" : "bg-white text-gray-500 border-[#121212]/10"}`}>
+                                {t.name}
                             </button>
                         ))}
                     </div>
@@ -134,7 +133,7 @@ export const ClassesPage = () => {
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <h4 className="text-sm font-medium text-[#121212] truncate">{c.name}</h4>
-                                            <p className="text-[10px] text-gray-500 font-light mt-0.5">{CLASS_TYPE_LABELS[c.type]}</p>
+                                            <p className="text-[10px] text-gray-500 font-light mt-0.5">{c.classType.name}</p>
                                         </div>
                                         <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
                                     </button>
@@ -181,7 +180,7 @@ export const ClassesPage = () => {
                                         <EnrollmentStatusBadge status={e.status} />
                                     </div>
                                     <p className="text-[10px] text-gray-500 font-light">
-                                        {CLASS_TYPE_LABELS[e.churchClass.type]} · Enrolled {formatDate(e.enrolledAt)}
+                                        {e.churchClass.classType.name} · Enrolled {formatDate(e.enrolledAt)}
                                     </p>
                                 </div>
                             ))}
@@ -225,7 +224,7 @@ export const ClassDetailPage = ({ id }: { id: string }) => {
                 {!isLoading && churchClass && (
                     <div className="absolute bottom-0 inset-x-0 p-6">
                         <span className="text-xs uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1 drop-shadow-sm">
-                            <GraduationCap size={12} /> {CLASS_TYPE_LABELS[churchClass.type]}
+                            <GraduationCap size={12} /> {churchClass.classType.name}
                         </span>
                         <h1 className="text-2xl font-light tracking-tight text-white mt-1 drop-shadow-md">
                             {churchClass.name}

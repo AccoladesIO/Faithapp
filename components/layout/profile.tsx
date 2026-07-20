@@ -5,9 +5,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
 import {
-    ClipboardList, HeartHandshake, GraduationCap, HandMetal, Cake,
+    ClipboardList, GraduationCap, HandMetal, Cake,
     AlertTriangle, Calendar, History, ClipboardCheck, Users2, UserPlus, Baby,
-    Building2, BookOpenCheck,
+    Building2, BookOpenCheck, MessageSquareText,
 } from "lucide-react";
 
 type Tint = "cream" | "tan" | "dark";
@@ -73,6 +73,8 @@ export const ProfilePage = () => {
 
     const isWorker = profile?.role === "WORKER";
     const isHod = isWorker && !!profile?.isHod;
+    const isPastor = !!profile?.pastorType;
+    const isTrainee = isWorker && !!profile?.isTrainee;
     const isFollowUp = isWorker && (
         profile?.workerProfile?.department?.key === "FOLLOW_UP" ||
         profile?.workerProfile?.secondaryDepartment?.key === "FOLLOW_UP"
@@ -80,7 +82,6 @@ export const ProfilePage = () => {
 
     const exploreTiles: GridTile[] = [
         { icon: ClipboardList, label: "My Stats", href: "/dashboard" },
-        { icon: HeartHandshake, label: "Giving", href: "/giving" },
         { icon: GraduationCap, label: "Classes", href: "/classes" },
         { icon: Baby, label: "Children's Church", href: "/children-church" },
         { icon: Cake, label: "Birthday Wishes", href: "/birthdays" },
@@ -96,10 +97,16 @@ export const ProfilePage = () => {
         ...(isFollowUp ? [{ icon: UserPlus, label: "Follow-Up", href: "/follow-up", tint: "tan" as Tint }] : []),
     ] : [];
 
-    const leadershipTiles: GridTile[] = isHod ? [
-        { icon: ClipboardCheck, label: "Dept. Attendance", href: "/attendance/department", tint: "dark", badge: "HOD" },
-        { icon: Users2, label: "Dept. Summary", href: "/department-summary", tint: "dark", badge: "HOD" },
-    ] : [];
+    const leadershipTiles: GridTile[] = [
+        ...(isHod ? [
+            { icon: ClipboardCheck, label: "Dept. Attendance", href: "/attendance/department", tint: "dark" as Tint, badge: "HOD" },
+            { icon: Users2, label: "Dept. Summary", href: "/department-summary", tint: "dark" as Tint, badge: "HOD" },
+            { icon: MessageSquareText, label: "Weekly Feedback", href: "/department-feedback", tint: "dark" as Tint, badge: "HOD" },
+        ] : []),
+        ...(isPastor && !isHod ? [
+            { icon: MessageSquareText, label: "Dept. Feedback", href: "/department-feedback", tint: "dark" as Tint, badge: "Pastor" },
+        ] : []),
+    ];
 
     const fullName = profile ? `${profile?.firstname ?? ""}`.trim() : "";
 
@@ -114,11 +121,18 @@ export const ProfilePage = () => {
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute bottom-0 inset-x-0 p-6">
                     <span className="text-xs uppercase tracking-widest text-white/80 font-semibold drop-shadow-sm">More</span>
-                    <h1 className="text-2xl font-light tracking-tight text-white mt-1 drop-shadow-md">
-                        {isLoading
-                            ? <span className="inline-block h-7 w-40 bg-white/20 rounded animate-pulse" />
-                            : fullName ? `Hi, ${fullName}` : "Everything Else"}
-                    </h1>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <h1 className="text-2xl font-light tracking-tight text-white drop-shadow-md">
+                            {isLoading
+                                ? <span className="inline-block h-7 w-40 bg-white/20 rounded animate-pulse" />
+                                : fullName ? `Hi, ${fullName}` : "Everything Else"}
+                        </h1>
+                        {!isLoading && isTrainee && (
+                            <span className="inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full bg-amber-400 text-[#121212]">
+                                Training
+                            </span>
+                        )}
+                    </div>
                     {!isLoading && (
                         <p className="text-xs text-white/70 font-light mt-1 drop-shadow-sm">{subtitle}</p>
                     )}

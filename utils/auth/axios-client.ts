@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { tokenStore } from "./token-store";
+import { tokenStore, passwordChangeStore } from "./token-store";
 
 declare module "axios" {
     interface InternalAxiosRequestConfig {
@@ -83,6 +83,9 @@ api.interceptors.request.use((config) => {
 
 export const commitAuthPayload = (payload: AuthPayload) => {
     const expiresAt = Date.now() + payload.expires_in * 1000;
+    // Set before tokenStore.set() — that call synchronously notifies
+    // subscribers (e.g. AuthContext), which read this flag right away.
+    passwordChangeStore.set(!!payload.requires_password_change);
     tokenStore.set({
         accessToken: payload.access_token,
         refreshToken: payload.refresh_token,

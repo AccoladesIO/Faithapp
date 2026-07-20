@@ -10,6 +10,21 @@ export type PushPermission = "default" | "granted" | "denied" | "unsupported";
 // LocalStorage key that marks "we have already subscribed on this device"
 const SUBSCRIBED_FLAG = "push_subscribed_v1";
 
+// navigator.serviceWorker.ready never settles (not reject, just hangs
+// forever) when no service worker ever activates for this page — e.g. in
+// dev (next-pwa's SW is disabled below production) or if registration
+// silently failed on a given device. try/catch alone can't recover from a
+// promise that never settles, so every await on it below is raced against
+// this timeout to guarantee isLoading always resolves.
+function withTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T> {
+    return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error("Timed out waiting for the service worker.")), ms),
+        ),
+    ]);
+}
+
 export interface UsePushReturn {
     isSubscribed: boolean;
     permission: PushPermission;
@@ -40,16 +55,23 @@ export function usePush(): UsePushReturn {
 
             setPermission(Notification.permission as PushPermission);
 
-            if (Notification.permission === "granted") {
-                const reg = await navigator.serviceWorker.ready;
-                const existing = await reg.pushManager.getSubscription();
-                setIsSubscribed(!!existing);
-            } else {
+            try {
+                if (Notification.permission === "granted") {
+                    const reg = await withTimeout(navigator.serviceWorker.ready);
+                    const existing = await reg.pushManager.getSubscription();
+                    setIsSubscribed(!!existing);
+                } else {
+                    setIsSubscribed(false);
+                    localStorage.removeItem(SUBSCRIBED_FLAG);
+                }
+            } catch {
+                // Service worker/subscription lookup can fail (flaky PWA push
+                // support) — fall back to "off" rather than leaving isLoading
+                // stuck true forever with no matching UI state to show for it.
                 setIsSubscribed(false);
-                localStorage.removeItem(SUBSCRIBED_FLAG);
+            } finally {
+                setIsLoading(false);
             }
-
-            setIsLoading(false);
         }
         init();
     }, []);
@@ -73,7 +95,7 @@ export function usePush(): UsePushReturn {
             if (!vapidKey) throw new Error("VAPID public key is not configured.");
 
             // 3. Create the push subscription via PushManager
-            const reg = await navigator.serviceWorker.ready;
+            const reg = await withTimeout(navigator.serviceWorker.ready);
             const subscription = await reg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(vapidKey),
@@ -109,7 +131,7 @@ export function usePush(): UsePushReturn {
         setError(null);
         try {
             // Remove from browser
-            const reg = await navigator.serviceWorker.ready;
+            const reg = await withTimeout(navigator.serviceWorker.ready);
             const subscription = await reg.pushManager.getSubscription();
             await subscription?.unsubscribe();
 

@@ -11,6 +11,7 @@ export interface BirthdayMember {
     departmentName: string | null;
     pastorType: "LEAD" | "PARISH" | "ASSOCIATE" | null;
     alreadyWishedByMe: boolean;
+    photoUrl: string | null;
 }
 
 export interface UseTodaysBirthdaysReturn {
