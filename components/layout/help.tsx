@@ -6,7 +6,7 @@ import {
     ArrowLeft, Search, ChevronDown, ChevronRight, CircleHelp,
     LayoutDashboard, Calendar, CheckSquare, HeartHandshake, Target,
     GraduationCap, Baby, User, Briefcase, Users2, UserPlus, ShieldCheck,
-    Building2, BookOpenCheck, HandHeart, UserCheck, Flame,
+    Building2, BookOpenCheck, HandHeart, UserCheck, Flame, Megaphone,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
@@ -110,6 +110,24 @@ export const HelpPage = () => {
                         id: "gs-4",
                         question: "How do I get to my account details or log out?",
                         answer: "Tap the round icon at the top of any screen — it opens Account Details, Notifications, Support & Pastoral Care, and Log Out, no matter which page you're on.",
+                    },
+                    {
+                        id: "gs-5",
+                        question: "A feature I used to see under More is gone — what happened?",
+                        answer: "Your church's admin team turns individual features on or off for everyone. If a tile disappeared, that feature was switched off — nothing about your account changed, and no data was lost.",
+                    },
+                ],
+            },
+            {
+                id: "announcements",
+                label: "Announcements",
+                icon: Megaphone,
+                visible: true,
+                items: [
+                    {
+                        id: "an-1",
+                        question: "Can I react to an announcement?",
+                        answer: "Yes — tap one of the emoji under any announcement (on Home or its detail page) to react. Tap it again to remove your reaction, or tap a different emoji to switch.",
                     },
                 ],
             },

@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
+import { useModuleState } from "@/hooks/use-module-state";
 import {
     ClipboardList, GraduationCap, HandMetal, Cake,
     AlertTriangle, Calendar, History, ClipboardCheck, Users2, UserPlus, Baby,
@@ -18,6 +19,7 @@ interface GridTile {
     href: string;
     badge?: string;
     tint?: Tint;
+    moduleKey?: string;
 }
 
 const TINT_STYLES: Record<Tint, { circle: string; icon: string }> = {
@@ -83,39 +85,40 @@ export const ProfilePage = () => {
         profile?.workerProfile?.department?.key === "ADMIN" ||
         profile?.workerProfile?.secondaryDepartment?.key === "ADMIN"
     );
+    const { isModuleEnabled } = useModuleState();
 
     const exploreTiles: GridTile[] = [
         { icon: ClipboardList, label: "My Stats", href: "/dashboard" },
-        { icon: GraduationCap, label: "Training Classes", href: "/classes" },
-        { icon: Baby, label: "Children's Church", href: "/children-church" },
+        { icon: GraduationCap, label: "Training Classes", href: "/classes", moduleKey: "classes" },
+        { icon: Baby, label: "Children's Church", href: "/children-church", moduleKey: "children_church" },
         { icon: Cake, label: "Birthday Wishes", href: "/birthdays" },
-        { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
-        { icon: Building2, label: "Facility Rental", href: "/facility-rental" },
-        { icon: BookOpenCheck, label: "Sunday School", href: "/sunday-school" },
-        { icon: HeartHandshake, label: "Prayer Requests", href: "/prayer-requests" },
-    ];
+        { icon: AlertTriangle, label: "Incidents", href: "/incidents", moduleKey: "incident_report" },
+        { icon: Building2, label: "Facility Rental", href: "/facility-rental", moduleKey: "facility_rental" },
+        { icon: BookOpenCheck, label: "Sunday School", href: "/sunday-school", moduleKey: "sunday_school" },
+        { icon: HeartHandshake, label: "Prayer Requests", href: "/prayer-requests", moduleKey: "prayer" },
+    ].filter((t) => isModuleEnabled(t.moduleKey));
 
-    const ministryTiles: GridTile[] = isWorker ? [
-        { icon: HandMetal, label: "Prayer Roster", href: "/prayer", tint: "tan", badge: "Workers" },
-        { icon: Calendar, label: "Leave Request", href: "/leave", tint: "tan" },
-        { icon: History, label: "Service History", href: "/service-history", tint: "tan" },
-        { icon: Flame, label: "Evangelism", href: "/evangelism", tint: "tan" },
-        ...(isFollowUp ? [{ icon: UserPlus, label: "Follow-Up", href: "/follow-up", tint: "tan" as Tint }] : []),
-    ] : [];
+    const ministryTiles: GridTile[] = (isWorker ? [
+        { icon: HandMetal, label: "Prayer Roster", href: "/prayer", tint: "tan" as Tint, badge: "Workers", moduleKey: "prayer" },
+        { icon: Calendar, label: "Leave Request", href: "/leave", tint: "tan" as Tint },
+        { icon: History, label: "Service History", href: "/service-history", tint: "tan" as Tint },
+        { icon: Flame, label: "Evangelism", href: "/evangelism", tint: "tan" as Tint, moduleKey: "evangelism" },
+        ...(isFollowUp ? [{ icon: UserPlus, label: "Follow-Up", href: "/follow-up", tint: "tan" as Tint, moduleKey: "follow_up" }] : []),
+    ] : []).filter((t) => isModuleEnabled(t.moduleKey));
 
     const leadershipTiles: GridTile[] = [
         ...(isHod ? [
             { icon: ClipboardCheck, label: "Dept. Attendance", href: "/attendance/department", tint: "dark" as Tint, badge: "HOD" },
             { icon: Users2, label: "Dept. Summary", href: "/department-summary", tint: "dark" as Tint, badge: "HOD" },
-            { icon: MessageSquareText, label: "Weekly Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "HOD" },
+            { icon: MessageSquareText, label: "Weekly Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "HOD", moduleKey: "pastor_feedback" },
         ] : []),
         ...(isPastor && !isHod ? [
-            { icon: MessageSquareText, label: "Pastor Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "Pastor" },
+            { icon: MessageSquareText, label: "Pastor Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "Pastor", moduleKey: "pastor_feedback" },
         ] : []),
         ...(isAdminDept ? [
             { icon: UserCheck, label: "Check Someone In", href: "/admin-checkin", tint: "dark" as Tint, badge: "Admin" },
         ] : []),
-    ];
+    ].filter((t) => isModuleEnabled(t.moduleKey));
 
     const fullName = profile ? `${profile?.firstname ?? ""}`.trim() : "";
 

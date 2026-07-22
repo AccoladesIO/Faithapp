@@ -15,6 +15,7 @@ import { useTodaysBirthdays, useSendBirthdayWish, useMyBirthdayWishes, BirthdayM
 import { formatLocalSlotTime, formatLocalTime } from "@/utils/parse-local-time";
 import { SLOT_TYPE_LABELS, SLOT_TYPE_ICONS } from "@/utils/slot-type-icons";
 import { Avatar } from "@/components/ui/avatar";
+import { ReactionBar } from "./reaction-bar";
 
 function formatAssignmentDate(iso: string): string {
     return new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" });
@@ -541,10 +542,15 @@ export const HomePage = () => {
                 ) : (
                     <div className="space-y-4">
                         {announcements.map((item) => (
-                            <button
+                            <div
                                 key={item.id}
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => router.push(`/announcements/${item.id}`)}
-                                className="w-full text-left bg-[#F9F9F9] p-5 border border-[#121212]/5 shadow-sm transition-all duration-300 hover:border-[#121212]/10"
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") router.push(`/announcements/${item.id}`);
+                                }}
+                                className="w-full text-left bg-[#F9F9F9] p-5 border border-[#121212]/5 shadow-sm transition-all duration-300 hover:border-[#121212]/10 cursor-pointer"
                             >
                                 <div className="flex items-center justify-between mb-3">
                                     <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold bg-[#121212]/10 text-[#121212]">
@@ -559,11 +565,14 @@ export const HomePage = () => {
                                     className="text-sm text-gray-600 font-light line-clamp-2 leading-relaxed mb-4"
                                     dangerouslySetInnerHTML={{ __html: item.body }}
                                 />
+                                <div onClick={(e) => e.stopPropagation()} className="mb-3">
+                                    <ReactionBar announcementId={item.id} />
+                                </div>
                                 <div className="flex items-center justify-between pt-1 border-t border-[#121212]/5">
                                     <span className="text-xs text-gray-500 font-light">Official Notice</span>
                                     <span className="text-xs font-semibold text-[#121212] hover:text-gray-600 transition-colors">View Details</span>
                                 </div>
-                            </button>
+                            </div>
                         ))}
                     </div>
                 )}
