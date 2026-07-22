@@ -6,7 +6,7 @@ import {
     ArrowLeft, Search, ChevronDown, ChevronRight, CircleHelp,
     LayoutDashboard, Calendar, CheckSquare, HeartHandshake, Target,
     GraduationCap, Baby, User, Briefcase, Users2, UserPlus, ShieldCheck,
-    Building2, BookOpenCheck, HandHeart, UserCheck, Flame, Megaphone,
+    Building2, BookOpenCheck, HandHeart, UserCheck, Flame, Megaphone, BookOpen,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
@@ -128,6 +128,24 @@ export const HelpPage = () => {
                         id: "an-1",
                         question: "Can I react to an announcement?",
                         answer: "Yes — tap one of the emoji under any announcement (on Home or its detail page) to react. Tap it again to remove your reaction, or tap a different emoji to switch.",
+                    },
+                ],
+            },
+            {
+                id: "sermons",
+                label: "Sermons",
+                icon: BookOpen,
+                visible: true,
+                items: [
+                    {
+                        id: "se-1",
+                        question: "Where do I find past sermons?",
+                        answer: "Under More, tap Sermons — each entry links out to a YouTube video or Mixlr recording, filterable by series.",
+                    },
+                    {
+                        id: "se-2",
+                        question: "Why is there no video for a sermon, just a 'Listen on Mixlr' button?",
+                        answer: "Some sermons are only linked from Mixlr rather than YouTube — tap the button to open it in Mixlr.",
                     },
                 ],
             },
