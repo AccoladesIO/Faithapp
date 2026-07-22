@@ -5,7 +5,7 @@ import { api } from "@/utils/auth/axios-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface DepartmentFeedbackRecord {
+export interface PastorFeedbackRecord {
     id: string;
     department: { id: string; name: string };
     weekOf: string;
@@ -21,7 +21,7 @@ export interface DepartmentFeedbackRecord {
     pastorRespondedAt: string | null;
 }
 
-export interface SubmitDepartmentFeedbackPayload {
+export interface SubmitPastorFeedbackPayload {
     departmentId: string;
     weekOf: string;
     attendanceNotes: string;
@@ -31,20 +31,20 @@ export interface SubmitDepartmentFeedbackPayload {
     additionalNotes?: string;
 }
 
-export interface UseDepartmentFeedbackReturn {
-    records: DepartmentFeedbackRecord[];
+export interface UsePastorFeedbackSubmissionReturn {
+    records: PastorFeedbackRecord[];
     isLoading: boolean;
     isSubmitting: boolean;
     error: string | null;
     submitError: string | null;
-    submitFeedback: (payload: SubmitDepartmentFeedbackPayload) => Promise<void>;
+    submitFeedback: (payload: SubmitPastorFeedbackPayload) => Promise<void>;
     refetch: () => void;
 }
 
 // ─── Hook — HOD/Assistant HOD's own submission + history ──────────────────────
 
-export function useDepartmentFeedback(): UseDepartmentFeedbackReturn {
-    const [records, setRecords] = useState<DepartmentFeedbackRecord[]>([]);
+export function usePastorFeedbackSubmission(): UsePastorFeedbackSubmissionReturn {
+    const [records, setRecords] = useState<PastorFeedbackRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -58,8 +58,8 @@ export function useDepartmentFeedback(): UseDepartmentFeedbackReturn {
             setIsLoading(true);
             setError(null);
             try {
-                const res = await api.get<{ data: { data: DepartmentFeedbackRecord[] } }>(
-                    "/department-feedback/my?page=1&limit=20"
+                const res = await api.get<{ data: { data: PastorFeedbackRecord[] } }>(
+                    "/pastor-feedback/my?page=1&limit=20"
                 );
                 if (!cancelled) setRecords(res.data.data.data);
             } catch (err: unknown) {
@@ -74,11 +74,11 @@ export function useDepartmentFeedback(): UseDepartmentFeedbackReturn {
         return () => { cancelled = true; };
     }, [fetchTick]);
 
-    const submitFeedback = useCallback(async (payload: SubmitDepartmentFeedbackPayload) => {
+    const submitFeedback = useCallback(async (payload: SubmitPastorFeedbackPayload) => {
         setIsSubmitting(true);
         setSubmitError(null);
         try {
-            await api.post("/department-feedback", payload);
+            await api.post("/pastor-feedback", payload);
             setFetchTick((t) => t + 1);
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : "Failed to submit feedback.";

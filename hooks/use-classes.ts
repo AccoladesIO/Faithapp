@@ -163,6 +163,9 @@ export interface MyClassEnrollment {
     completedAt: string | null;
     cancelledAt: string | null;
     churchClass: ChurchClass;
+    certificateIssued: boolean;
+    certificateIssuedAt: string | null;
+    certificateNumber: string | null;
 }
 
 export interface UseMyEnrollmentsReturn {

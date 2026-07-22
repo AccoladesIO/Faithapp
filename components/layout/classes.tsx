@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import {
     ArrowLeft, GraduationCap, AlertCircle, ChevronRight,
-    ChevronLeft, CheckCircle2, XCircle, Clock, BookOpen,
+    ChevronLeft, CheckCircle2, XCircle, Clock, BookOpen, Award,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -69,7 +69,7 @@ export const ClassesPage = () => {
                         <GraduationCap size={12} /> Discipleship
                     </span>
                     <h1 className="text-2xl font-light tracking-tight text-white mt-1 drop-shadow-md">
-                        Classes
+                        Training Classes
                     </h1>
                 </div>
             </div>
@@ -182,6 +182,11 @@ export const ClassesPage = () => {
                                     <p className="text-[10px] text-gray-500 font-light">
                                         {e.churchClass.classType.name} · Enrolled {formatDate(e.enrolledAt)}
                                     </p>
+                                    {e.certificateIssued && (
+                                        <p className="text-[10px] text-blue-700 font-medium flex items-center gap-1 mt-1">
+                                            <Award size={11} /> Certificate issued{e.certificateNumber ? ` · #${e.certificateNumber}` : ""}
+                                        </p>
+                                    )}
                                 </div>
                             ))}
                         </div>

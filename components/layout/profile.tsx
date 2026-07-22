@@ -7,7 +7,7 @@ import { useProfile } from "@/hooks/use-profile";
 import {
     ClipboardList, GraduationCap, HandMetal, Cake,
     AlertTriangle, Calendar, History, ClipboardCheck, Users2, UserPlus, Baby,
-    Building2, BookOpenCheck, MessageSquareText,
+    Building2, BookOpenCheck, MessageSquareText, UserCheck, HeartHandshake, Flame,
 } from "lucide-react";
 
 type Tint = "cream" | "tan" | "dark";
@@ -79,21 +79,27 @@ export const ProfilePage = () => {
         profile?.workerProfile?.department?.key === "FOLLOW_UP" ||
         profile?.workerProfile?.secondaryDepartment?.key === "FOLLOW_UP"
     );
+    const isAdminDept = isWorker && (
+        profile?.workerProfile?.department?.key === "ADMIN" ||
+        profile?.workerProfile?.secondaryDepartment?.key === "ADMIN"
+    );
 
     const exploreTiles: GridTile[] = [
         { icon: ClipboardList, label: "My Stats", href: "/dashboard" },
-        { icon: GraduationCap, label: "Classes", href: "/classes" },
+        { icon: GraduationCap, label: "Training Classes", href: "/classes" },
         { icon: Baby, label: "Children's Church", href: "/children-church" },
         { icon: Cake, label: "Birthday Wishes", href: "/birthdays" },
         { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
         { icon: Building2, label: "Facility Rental", href: "/facility-rental" },
         { icon: BookOpenCheck, label: "Sunday School", href: "/sunday-school" },
+        { icon: HeartHandshake, label: "Prayer Requests", href: "/prayer-requests" },
     ];
 
     const ministryTiles: GridTile[] = isWorker ? [
         { icon: HandMetal, label: "Prayer Roster", href: "/prayer", tint: "tan", badge: "Workers" },
         { icon: Calendar, label: "Leave Request", href: "/leave", tint: "tan" },
         { icon: History, label: "Service History", href: "/service-history", tint: "tan" },
+        { icon: Flame, label: "Evangelism", href: "/evangelism", tint: "tan" },
         ...(isFollowUp ? [{ icon: UserPlus, label: "Follow-Up", href: "/follow-up", tint: "tan" as Tint }] : []),
     ] : [];
 
@@ -101,10 +107,13 @@ export const ProfilePage = () => {
         ...(isHod ? [
             { icon: ClipboardCheck, label: "Dept. Attendance", href: "/attendance/department", tint: "dark" as Tint, badge: "HOD" },
             { icon: Users2, label: "Dept. Summary", href: "/department-summary", tint: "dark" as Tint, badge: "HOD" },
-            { icon: MessageSquareText, label: "Weekly Feedback", href: "/department-feedback", tint: "dark" as Tint, badge: "HOD" },
+            { icon: MessageSquareText, label: "Weekly Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "HOD" },
         ] : []),
         ...(isPastor && !isHod ? [
-            { icon: MessageSquareText, label: "Dept. Feedback", href: "/department-feedback", tint: "dark" as Tint, badge: "Pastor" },
+            { icon: MessageSquareText, label: "Pastor Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "Pastor" },
+        ] : []),
+        ...(isAdminDept ? [
+            { icon: UserCheck, label: "Check Someone In", href: "/admin-checkin", tint: "dark" as Tint, badge: "Admin" },
         ] : []),
     ];
 

@@ -1,4 +1,4 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { usePastorFeedback } from "../use-pastor-feedback";
 import { api } from "@/utils/auth/axios-client";
@@ -33,7 +33,7 @@ describe("usePastorFeedback", () => {
 
         await act(async () => { await result.current.fetchFeedback(); });
 
-        expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/department-feedback/pastor?page=1&limit=10"));
+        expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("/pastor-feedback/pastor?page=1&limit=10"));
         expect(result.current.records).toEqual([record]);
         expect(result.current.pagination).toEqual({ page: 1, limit: 10, totalCount: 1, totalPages: 1 });
     });
@@ -45,6 +45,15 @@ describe("usePastorFeedback", () => {
         await act(async () => { await result.current.fetchFeedback(1, "d1"); });
 
         expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("departmentId=d1"));
+    });
+
+    it("fetchFeedback includes weekOf when provided", async () => {
+        mockGet.mockResolvedValueOnce({ data: { data: { data: [], page: 1, limit: 10, totalCount: 0, totalPages: 1 } } });
+        const { result } = renderHook(() => usePastorFeedback());
+
+        await act(async () => { await result.current.fetchFeedback(1, undefined, "2026-07-13"); });
+
+        expect(mockGet).toHaveBeenCalledWith(expect.stringContaining("weekOf=2026-07-13"));
     });
 
     it("fetchFeedback sets an error message on failure", async () => {
@@ -66,7 +75,7 @@ describe("usePastorFeedback", () => {
 
         await act(async () => { await result.current.respond("f1", "Great work!"); });
 
-        expect(mockPost).toHaveBeenCalledWith("/department-feedback/pastor/f1/respond", { response: "Great work!" });
+        expect(mockPost).toHaveBeenCalledWith("/pastor-feedback/pastor/f1/respond", { response: "Great work!" });
         expect(result.current.records[0].pastorResponse).toBe("Great work!");
     });
 

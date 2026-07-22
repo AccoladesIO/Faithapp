@@ -10,9 +10,9 @@ import { useRouter } from "next/navigation";
 import { api } from "@/utils/auth/axios-client";
 import { useProfile } from "@/hooks/use-profile";
 import {
-    useDepartmentFeedback,
-    DepartmentFeedbackRecord,
-} from "@/hooks/use-department-feedback";
+    usePastorFeedbackSubmission,
+    PastorFeedbackRecord,
+} from "@/hooks/use-pastor-feedback-submission";
 import { usePastorFeedback } from "@/hooks/use-pastor-feedback";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -21,6 +21,15 @@ function formatDate(iso: string): string {
     return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", {
         day: "numeric", month: "short", year: "numeric",
     });
+}
+
+// weekOf is stored as the Monday of the week and matched exactly on the backend —
+// snap any picked date to that week's Monday so the filter never silently returns nothing.
+function mondayOf(dateStr: string): string {
+    const d = new Date(`${dateStr}T00:00:00`);
+    const diff = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - diff);
+    return d.toISOString().slice(0, 10);
 }
 
 // Defaults the form to the Monday of the most recently completed week.
@@ -34,7 +43,7 @@ function lastMonday(): string {
 
 // ─── Feedback card ────────────────────────────────────────────────────────────
 
-function FeedbackCard({ record }: { record: DepartmentFeedbackRecord }) {
+function FeedbackCard({ record }: { record: PastorFeedbackRecord }) {
     return (
         <div className="bg-white border border-[#121212]/5 p-4 shadow-sm space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -92,7 +101,7 @@ const defaultForm = {
 
 type Tab = "mine" | "pastor";
 
-export const DepartmentFeedbackPage = () => {
+export const PastorFeedbackPage = () => {
     const router = useRouter();
     const { profile } = useProfile();
     const isHod = !!profile?.isHod;
@@ -100,7 +109,7 @@ export const DepartmentFeedbackPage = () => {
 
     const {
         records, isLoading, isSubmitting, error, submitError, submitFeedback,
-    } = useDepartmentFeedback();
+    } = usePastorFeedbackSubmission();
     const {
         records: pastorRecords, pagination: pastorPagination, isLoading: pastorLoading,
         error: pastorError, isResponding, respondError, fetchFeedback, respond,
@@ -113,12 +122,13 @@ export const DepartmentFeedbackPage = () => {
 
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
     const [deptFilter, setDeptFilter] = useState("");
+    const [weekFilter, setWeekFilter] = useState("");
     const [respondingId, setRespondingId] = useState<string | null>(null);
     const [responseDraft, setResponseDraft] = useState("");
 
     useEffect(() => {
         if (tab === "pastor") {
-            fetchFeedback(1, deptFilter || undefined);
+            fetchFeedback(1, deptFilter || undefined, weekFilter || undefined);
             if (departments.length === 0) {
                 api.get<{ data: { id: string; name: string }[] }>("/departments")
                     .then((res) => setDepartments(res.data.data ?? []))
@@ -126,7 +136,7 @@ export const DepartmentFeedbackPage = () => {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tab, deptFilter]);
+    }, [tab, deptFilter, weekFilter]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -316,22 +326,32 @@ export const DepartmentFeedbackPage = () => {
 
                 {tab === "pastor" && isPastor && (
                     <div>
-                        <div className="flex gap-2 mb-4 flex-wrap">
-                            <button
-                                onClick={() => setDeptFilter("")}
-                                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full border transition-colors ${deptFilter === "" ? "bg-[#121212] text-white border-[#121212]" : "bg-white text-[#756E69] border-[#121212]/10 hover:text-[#121212]"}`}
+                        <div className="flex gap-2 mb-4">
+                            <select
+                                value={deptFilter}
+                                onChange={(e) => setDeptFilter(e.target.value)}
+                                className="flex-1 bg-[#F9F9F9] border border-[#121212]/10 rounded-xl px-3 py-2.5 text-xs font-sans outline-none focus:border-[#121212]/30"
                             >
-                                All Departments
-                            </button>
-                            {departments.map((d) => (
+                                <option value="">All Departments</option>
+                                {departments.map((d) => (
+                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                            </select>
+                            <input
+                                type="date"
+                                value={weekFilter}
+                                onChange={(e) => setWeekFilter(e.target.value ? mondayOf(e.target.value) : "")}
+                                title="Snaps to the Monday of the selected week"
+                                className="bg-[#F9F9F9] border border-[#121212]/10 rounded-xl px-3 py-2.5 text-xs font-sans outline-none focus:border-[#121212]/30"
+                            />
+                            {weekFilter && (
                                 <button
-                                    key={d.id}
-                                    onClick={() => setDeptFilter(d.id)}
-                                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full border transition-colors ${deptFilter === d.id ? "bg-[#121212] text-white border-[#121212]" : "bg-white text-[#756E69] border-[#121212]/10 hover:text-[#121212]"}`}
+                                    onClick={() => setWeekFilter("")}
+                                    className="text-[10px] font-bold uppercase tracking-wider text-[#756E69] hover:text-[#121212] shrink-0"
                                 >
-                                    {d.name}
+                                    Clear
                                 </button>
-                            ))}
+                            )}
                         </div>
 
                         {respondError && (
@@ -346,7 +366,7 @@ export const DepartmentFeedbackPage = () => {
                             <div className="flex flex-col items-start gap-3 py-8 text-gray-500">
                                 <p className="text-sm font-light">{pastorError}</p>
                                 <button
-                                    onClick={() => fetchFeedback(1, deptFilter || undefined)}
+                                    onClick={() => fetchFeedback(1, deptFilter || undefined, weekFilter || undefined)}
                                     className="flex items-center gap-1.5 text-xs font-semibold text-[#121212] hover:underline"
                                 >
                                     <RefreshCw size={12} /> Retry
@@ -407,7 +427,7 @@ export const DepartmentFeedbackPage = () => {
                                 {pastorPagination && pastorPagination.totalPages > 1 && (
                                     <div className="flex items-center justify-between mt-4">
                                         <button
-                                            onClick={() => fetchFeedback(pastorPagination.page - 1, deptFilter || undefined)}
+                                            onClick={() => fetchFeedback(pastorPagination.page - 1, deptFilter || undefined, weekFilter || undefined)}
                                             disabled={pastorPagination.page <= 1}
                                             className="flex items-center gap-1 text-xs font-semibold text-[#756E69] hover:text-[#121212] disabled:opacity-40 transition-colors"
                                         >
@@ -417,7 +437,7 @@ export const DepartmentFeedbackPage = () => {
                                             Page {pastorPagination.page} of {pastorPagination.totalPages}
                                         </span>
                                         <button
-                                            onClick={() => fetchFeedback(pastorPagination.page + 1, deptFilter || undefined)}
+                                            onClick={() => fetchFeedback(pastorPagination.page + 1, deptFilter || undefined, weekFilter || undefined)}
                                             disabled={pastorPagination.page >= pastorPagination.totalPages}
                                             className="flex items-center gap-1 text-xs font-semibold text-[#756E69] hover:text-[#121212] disabled:opacity-40 transition-colors"
                                         >

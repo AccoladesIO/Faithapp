@@ -1,6 +1,6 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { useDepartmentFeedback } from "../use-department-feedback";
+import { usePastorFeedbackSubmission } from "../use-pastor-feedback-submission";
 import { api } from "@/utils/auth/axios-client";
 
 jest.mock("@/utils/auth/axios-client", () => ({
@@ -19,20 +19,20 @@ const record = {
 
 beforeEach(() => jest.clearAllMocks());
 
-describe("useDepartmentFeedback", () => {
+describe("usePastorFeedbackSubmission", () => {
     it("loads the caller's feedback history", async () => {
         mockGet.mockResolvedValueOnce({ data: { data: { data: [record] } } });
-        const { result } = renderHook(() => useDepartmentFeedback());
+        const { result } = renderHook(() => usePastorFeedbackSubmission());
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        expect(mockGet).toHaveBeenCalledWith("/department-feedback/my?page=1&limit=20");
+        expect(mockGet).toHaveBeenCalledWith("/pastor-feedback/my?page=1&limit=20");
         expect(result.current.records).toEqual([record]);
     });
 
     it("sets an error message on fetch failure", async () => {
         mockGet.mockRejectedValueOnce(new Error("Server error"));
-        const { result } = renderHook(() => useDepartmentFeedback());
+        const { result } = renderHook(() => usePastorFeedbackSubmission());
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -41,7 +41,7 @@ describe("useDepartmentFeedback", () => {
 
     it("submitFeedback posts the payload and refetches", async () => {
         mockGet.mockResolvedValueOnce({ data: { data: { data: [] } } });
-        const { result } = renderHook(() => useDepartmentFeedback());
+        const { result } = renderHook(() => usePastorFeedbackSubmission());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         mockPost.mockResolvedValueOnce({ data: {} });
@@ -54,7 +54,7 @@ describe("useDepartmentFeedback", () => {
             });
         });
 
-        expect(mockPost).toHaveBeenCalledWith("/department-feedback", {
+        expect(mockPost).toHaveBeenCalledWith("/pastor-feedback", {
             departmentId: "d1", weekOf: "2026-06-08", attendanceNotes: "Good turnout",
             highlights: "New volunteers", challenges: "Equipment",
         });
@@ -63,7 +63,7 @@ describe("useDepartmentFeedback", () => {
 
     it("submitFeedback sets submitError and rethrows when already submitted this week", async () => {
         mockGet.mockResolvedValueOnce({ data: { data: { data: [] } } });
-        const { result } = renderHook(() => useDepartmentFeedback());
+        const { result } = renderHook(() => usePastorFeedbackSubmission());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         mockPost.mockRejectedValueOnce(new Error("Already submitted feedback for this week"));
