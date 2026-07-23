@@ -8,7 +8,7 @@ import { useModuleState } from "@/hooks/use-module-state";
 import {
     ClipboardList, GraduationCap, HandMetal, Cake,
     AlertTriangle, Calendar, History, ClipboardCheck, Users2, UserPlus, Baby,
-    Building2, BookOpenCheck, MessageSquareText, UserCheck, HeartHandshake, Flame, BookOpen,
+    Building2, BookOpenCheck, MessageSquareText, UserCheck, HeartHandshake, Flame, BookOpen, Gamepad2,
 } from "lucide-react";
 
 type Tint = "cream" | "tan" | "dark";
@@ -97,6 +97,7 @@ export const ProfilePage = () => {
         { icon: BookOpenCheck, label: "Sunday School", href: "/sunday-school", moduleKey: "sunday_school" },
         { icon: HeartHandshake, label: "Prayer Requests", href: "/prayer-requests", moduleKey: "prayer" },
         { icon: BookOpen, label: "Sermons", href: "/sermons", moduleKey: "sermons" },
+        { icon: Gamepad2, label: "Games", href: "/games", moduleKey: "games" },
     ].filter((t) => isModuleEnabled(t.moduleKey));
 
     const ministryTiles: GridTile[] = (isWorker ? [

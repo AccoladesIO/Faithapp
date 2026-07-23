@@ -6,7 +6,7 @@ import {
     ArrowLeft, Search, ChevronDown, ChevronRight, CircleHelp,
     LayoutDashboard, Calendar, CheckSquare, HeartHandshake, Target,
     GraduationCap, Baby, User, Briefcase, Users2, UserPlus, ShieldCheck,
-    Building2, BookOpenCheck, HandHeart, UserCheck, Flame, Megaphone, BookOpen,
+    Building2, BookOpenCheck, HandHeart, UserCheck, Flame, Megaphone, BookOpen, Gamepad2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
@@ -146,6 +146,29 @@ export const HelpPage = () => {
                         id: "se-2",
                         question: "Why is there no video for a sermon, just a 'Listen on Mixlr' button?",
                         answer: "Some sermons are only linked from Mixlr rather than YouTube — tap the button to open it in Mixlr.",
+                    },
+                ],
+            },
+            {
+                id: "games",
+                label: "Games",
+                icon: Gamepad2,
+                visible: true,
+                items: [
+                    {
+                        id: "ga-1",
+                        question: "How do I join a game?",
+                        answer: "Under More, tap Games, then enter the join code your host shared (it looks like GAME-X7K2P9).",
+                    },
+                    {
+                        id: "ga-2",
+                        question: "How is my score calculated?",
+                        answer: "Correct answers score more the faster you answer — an instant correct answer earns full points, one submitted right before time runs out earns about half.",
+                    },
+                    {
+                        id: "ga-3",
+                        question: "Can I change my answer after submitting?",
+                        answer: "No — each question can only be answered once, so choose carefully.",
                     },
                 ],
             },
