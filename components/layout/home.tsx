@@ -14,6 +14,8 @@ import { useMyAssignments } from "@/hooks/use-my-assignments";
 import { useTodaysBirthdays, useSendBirthdayWish, useMyBirthdayWishes, BirthdayMember } from "@/hooks/use-birthdays";
 import { formatLocalSlotTime, formatLocalTime } from "@/utils/parse-local-time";
 import { SLOT_TYPE_LABELS, SLOT_TYPE_ICONS } from "@/utils/slot-type-icons";
+import { Avatar } from "@/components/ui/avatar";
+import { ReactionBar } from "./reaction-bar";
 
 function formatAssignmentDate(iso: string): string {
     return new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" });
@@ -74,11 +76,12 @@ function FeedSkeleton() {
 }
 
 function BirthdayCard({
-    id, name, subtitle, isSent, sendState, onSend,
+    id, name, subtitle, photoUrl, isSent, sendState, onSend,
 }: {
     id: string;
     name: string;
     subtitle: string | null;
+    photoUrl: string | null;
     isSent: boolean;
     sendState: { isSending: boolean; error: string | null };
     onSend: (id: string, message: string) => void;
@@ -89,6 +92,7 @@ function BirthdayCard({
     if (isSent) {
         return (
             <div className="shrink-0 w-fit max-w-56 bg-[#F4F1EA] rounded-2xl p-4 flex items-center gap-2">
+                <Avatar photoUrl={photoUrl} name={name} size={28} textSize="text-[9px]" />
                 <CheckCircle2 size={16} className="text-green-600 flex-shrink-0" />
                 <div className="min-w-0">
                     <p className="text-xs text-[#121212] font-medium truncate">Wish sent to {name}</p>
@@ -100,9 +104,12 @@ function BirthdayCard({
 
     return (
         <div className={`shrink-0 bg-[#F4F1EA] rounded-2xl p-4 ${isOpen ? "w-64" : "w-fit max-w-56"}`}>
-            <p className="text-xs uppercase tracking-widest text-[#756E69] font-bold flex items-center gap-1.5 mb-1 whitespace-nowrap">
-                <Cake size={12} /> Birthday
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+                <Avatar photoUrl={photoUrl} name={name} size={28} textSize="text-[9px]" />
+                <p className="text-xs uppercase tracking-widest text-[#756E69] font-bold flex items-center gap-1.5 whitespace-nowrap">
+                    <Cake size={12} /> Birthday
+                </p>
+            </div>
             <p className="text-sm font-medium text-[#121212] mb-2 truncate">{name}</p>
             {subtitle && <p className="text-[10px] text-gray-500 font-light truncate -mt-1.5 mb-2">{subtitle}</p>}
             {isOpen ? (
@@ -509,6 +516,7 @@ export const HomePage = () => {
                                         id={b.id}
                                         name={`${b.firstname} ${b.lastname}`}
                                         subtitle={isDuplicateName ? celebrantSubtitle(b) : null}
+                                        photoUrl={b.photoUrl}
                                         isSent={sentIds.has(b.id) || b.alreadyWishedByMe}
                                         sendState={{ isSending, error: sendWishError }}
                                         onSend={sendWish}
@@ -534,10 +542,15 @@ export const HomePage = () => {
                 ) : (
                     <div className="space-y-4">
                         {announcements.map((item) => (
-                            <button
+                            <div
                                 key={item.id}
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => router.push(`/announcements/${item.id}`)}
-                                className="w-full text-left bg-[#F9F9F9] p-5 border border-[#121212]/5 shadow-sm transition-all duration-300 hover:border-[#121212]/10"
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") router.push(`/announcements/${item.id}`);
+                                }}
+                                className="w-full text-left bg-[#F9F9F9] p-5 border border-[#121212]/5 shadow-sm transition-all duration-300 hover:border-[#121212]/10 cursor-pointer"
                             >
                                 <div className="flex items-center justify-between mb-3">
                                     <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold bg-[#121212]/10 text-[#121212]">
@@ -552,11 +565,14 @@ export const HomePage = () => {
                                     className="text-sm text-gray-600 font-light line-clamp-2 leading-relaxed mb-4"
                                     dangerouslySetInnerHTML={{ __html: item.body }}
                                 />
+                                <div onClick={(e) => e.stopPropagation()} className="mb-3">
+                                    <ReactionBar announcementId={item.id} />
+                                </div>
                                 <div className="flex items-center justify-between pt-1 border-t border-[#121212]/5">
                                     <span className="text-xs text-gray-500 font-light">Official Notice</span>
                                     <span className="text-xs font-semibold text-[#121212] hover:text-gray-600 transition-colors">View Details</span>
                                 </div>
-                            </button>
+                            </div>
                         ))}
                     </div>
                 )}

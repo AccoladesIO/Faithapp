@@ -35,8 +35,10 @@ export interface UserProfile {
     birthMonth: number | null;
     birthYear: number | null;
     changedPassword: boolean;
+    photoUrl: string | null;
     workerProfile: WorkerProfile | null;
     isHod: boolean;
+    isTrainee: boolean;
     pastorType: "LEAD" | "PARISH" | "ASSOCIATE" | null;
 }
 

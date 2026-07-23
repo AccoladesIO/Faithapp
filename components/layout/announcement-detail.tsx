@@ -4,6 +4,7 @@ import React from "react";
 import { ArrowLeft, Volume2, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAnnouncementDetail } from "@/hooks/use-announcement-detail";
+import { ReactionBar } from "./reaction-bar";
 
 function formatFullDate(iso: string): string {
     return new Date(iso).toLocaleDateString("en-GB", {
@@ -69,6 +70,10 @@ export const AnnouncementDetailPage = ({ id }: { id: string }) => {
                         className="text-sm text-gray-600 font-light leading-relaxed [&_a]:underline [&_a]:text-[#121212]"
                         dangerouslySetInnerHTML={{ __html: announcement.body }}
                     />
+
+                    <div className="mt-5">
+                        <ReactionBar announcementId={announcement.id} />
+                    </div>
 
                     <div className="mt-8 pt-4 border-t border-[#121212]/5 space-y-1">
                         {announcement.department && (

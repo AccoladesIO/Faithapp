@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Calendar, CheckSquare, LayoutGrid } from 'lucide-react';
+import { Home, Calendar, CheckSquare, LayoutGrid, HeartHandshake } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type UserRole = 'MEMBER' | 'WORKER' | null;
@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'events', label: 'Events', icon: Calendar },
     { id: 'attendance', label: 'Attendance', icon: CheckSquare },
+    { id: 'giving', label: 'Giving', icon: HeartHandshake },
     { id: 'profile', label: 'More', icon: LayoutGrid },
 ];
 

@@ -9,13 +9,14 @@ import React, {
     useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { tokenStore } from "@/utils/auth/token-store";
+import { tokenStore, passwordChangeStore } from "@/utils/auth/token-store";
 import { authService, LoginResult } from "@/utils/auth/auth";
 import { refreshAccessToken } from "@/utils/auth/axios-client";
 
 type AuthState = {
     isAuthenticated: boolean;
     isLoading: boolean;
+    requiresPasswordChange: boolean;
     login: (email: string, password: string, deviceId: string) => Promise<LoginResult>;
     logout: () => Promise<void>;
 };
@@ -37,6 +38,7 @@ const log = (label: string, detail?: string) => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const router = useRouter();
 
@@ -111,10 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 });
                 log("🔑 Token stored", `expires at ${expiresAt}`);
                 setIsAuthenticated(true);
+                setRequiresPasswordChange(passwordChangeStore.get());
                 scheduleRefresh();
             } else {
                 log("🚪 Token cleared — user is unauthenticated");
                 setIsAuthenticated(false);
+                setRequiresPasswordChange(false);
                 clearTimer();
             }
         });
@@ -132,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 isActive ? "user remains authenticated" : "redirecting to login"
             );
             setIsAuthenticated(isActive);
+            setRequiresPasswordChange(isActive ? passwordChangeStore.get() : false);
             setIsLoading(false);
         });
     }, []);
@@ -152,10 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [router]);
 
     return (
-        <AuthContext.Provider value= {{ isAuthenticated, isLoading, login, logout }
-}>
-    { children }
-    </AuthContext.Provider>
+        <AuthContext.Provider value={{ isAuthenticated, isLoading, requiresPasswordChange, login, logout }}>
+            {children}
+        </AuthContext.Provider>
     );
 }
 

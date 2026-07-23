@@ -3,27 +3,20 @@
 import { useState, useEffect } from "react";
 import { api } from "@/utils/auth/axios-client";
 
-export type ChurchClassType =
-    | "BELIEVERS"
-    | "BAPTISMAL"
-    | "WORKERS_IN_TRAINING"
-    | "BIBLE_COLLEGE"
-    | "SCHOOL_OF_DISCIPLESHIP";
-
-export const CLASS_TYPE_LABELS: Record<ChurchClassType, string> = {
-    BELIEVERS: "Believers' Class",
-    BAPTISMAL: "Baptismal Class",
-    WORKERS_IN_TRAINING: "Workers in Training",
-    BIBLE_COLLEGE: "Bible College",
-    SCHOOL_OF_DISCIPLESHIP: "School of Discipleship",
-};
+export interface ClassType {
+    id: string;
+    name: string;
+    description: string | null;
+    isActive: boolean;
+    nextClassType: { id: string; name: string } | null;
+}
 
 export type EnrollmentStatus = "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 
 export interface ChurchClass {
     id: string;
     name: string;
-    type: ChurchClassType;
+    classType: ClassType;
     description: string | null;
     status: "ACTIVE" | "CLOSED";
     facilitator: { id: string; firstname: string; lastname: string } | null;
@@ -39,6 +32,41 @@ export interface ClassesPage {
     totalPages: number;
 }
 
+export interface UseClassTypesReturn {
+    classTypes: ClassType[];
+    isLoading: boolean;
+    error: string | null;
+}
+
+export function useClassTypes(): UseClassTypesReturn {
+    const [classTypes, setClassTypes] = useState<ClassType[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function load() {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const res = await api.get<{ data: ClassType[] }>("/classes/types");
+                if (!cancelled) setClassTypes(res.data.data.filter((t) => t.isActive));
+            } catch (err: unknown) {
+                if (!cancelled)
+                    setError(err instanceof Error ? err.message : "Could not load class types.");
+            } finally {
+                if (!cancelled) setIsLoading(false);
+            }
+        }
+
+        load();
+        return () => { cancelled = true; };
+    }, []);
+
+    return { classTypes, isLoading, error };
+}
+
 export interface UseClassesReturn {
     classes: ChurchClass[];
     isLoading: boolean;
@@ -46,8 +74,8 @@ export interface UseClassesReturn {
     page: number;
     totalPages: number;
     goToPage: (page: number) => void;
-    typeFilter: ChurchClassType | null;
-    setTypeFilter: (type: ChurchClassType | null) => void;
+    typeFilter: string | null;
+    setTypeFilter: (classTypeId: string | null) => void;
 }
 
 export function useClasses(limit = 10): UseClassesReturn {
@@ -56,7 +84,7 @@ export function useClasses(limit = 10): UseClassesReturn {
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [typeFilter, setTypeFilterState] = useState<ChurchClassType | null>(null);
+    const [typeFilter, setTypeFilterState] = useState<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -66,7 +94,7 @@ export function useClasses(limit = 10): UseClassesReturn {
             setError(null);
             try {
                 const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-                if (typeFilter) params.set("type", typeFilter);
+                if (typeFilter) params.set("classTypeId", typeFilter);
                 const res = await api.get<{ data: ClassesPage }>(`/classes?${params.toString()}`);
                 if (!cancelled) {
                     setClasses(res.data.data.data);
@@ -84,8 +112,8 @@ export function useClasses(limit = 10): UseClassesReturn {
         return () => { cancelled = true; };
     }, [page, limit, typeFilter]);
 
-    const setTypeFilter = (type: ChurchClassType | null) => {
-        setTypeFilterState(type);
+    const setTypeFilter = (classTypeId: string | null) => {
+        setTypeFilterState(classTypeId);
         setPage(1);
     };
 
@@ -135,6 +163,9 @@ export interface MyClassEnrollment {
     completedAt: string | null;
     cancelledAt: string | null;
     churchClass: ChurchClass;
+    certificateIssued: boolean;
+    certificateIssuedAt: string | null;
+    certificateNumber: string | null;
 }
 
 export interface UseMyEnrollmentsReturn {

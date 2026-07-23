@@ -6,10 +6,11 @@ import {
     ArrowLeft, Search, ChevronDown, ChevronRight, CircleHelp,
     LayoutDashboard, Calendar, CheckSquare, HeartHandshake, Target,
     GraduationCap, Baby, User, Briefcase, Users2, UserPlus, ShieldCheck,
-    Building2, BookOpenCheck,
+    Building2, BookOpenCheck, HandHeart, UserCheck, Flame, Megaphone, BookOpen, Gamepad2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
+import { useModuleState } from "@/hooks/use-module-state";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ function FaqRow({
 export const HelpPage = () => {
     const router = useRouter();
     const { profile, isLoading } = useProfile();
+    const { isModuleEnabled } = useModuleState();
     const [query, setQuery] = useState("");
     const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -74,6 +76,11 @@ export const HelpPage = () => {
         isWorker && (
             profile?.workerProfile?.department?.key === "SUNDAY_SCHOOL" ||
             profile?.workerProfile?.secondaryDepartment?.key === "SUNDAY_SCHOOL"
+        );
+    const isAdminDept =
+        isWorker && (
+            profile?.workerProfile?.department?.key === "ADMIN" ||
+            profile?.workerProfile?.secondaryDepartment?.key === "ADMIN"
         );
 
     const toggle = (id: string) => setActiveId((prev) => (prev === id ? null : id));
@@ -105,6 +112,111 @@ export const HelpPage = () => {
                         id: "gs-4",
                         question: "How do I get to my account details or log out?",
                         answer: "Tap the round icon at the top of any screen — it opens Account Details, Notifications, Support & Pastoral Care, and Log Out, no matter which page you're on.",
+                    },
+                    {
+                        id: "gs-5",
+                        question: "A feature I used to see under More is gone — what happened?",
+                        answer: "Your church's admin team turns individual features on or off for everyone. If a tile disappeared, that feature was switched off — nothing about your account changed, and no data was lost.",
+                    },
+                ],
+            },
+            {
+                id: "announcements",
+                label: "Announcements",
+                icon: Megaphone,
+                visible: true,
+                items: [
+                    {
+                        id: "an-1",
+                        question: "Can I react to an announcement?",
+                        answer: "Yes — tap one of the emoji under any announcement (on Home or its detail page) to react. Tap it again to remove your reaction, or tap a different emoji to switch.",
+                    },
+                ],
+            },
+            {
+                id: "sermons",
+                label: "Sermons",
+                icon: BookOpen,
+                visible: isModuleEnabled("sermons"),
+                items: [
+                    {
+                        id: "se-1",
+                        question: "Where do I find past sermons?",
+                        answer: "Under More, tap Sermons — each entry links out to a YouTube video or Mixlr recording, filterable by series.",
+                    },
+                    {
+                        id: "se-2",
+                        question: "Why is there no video for a sermon, just a 'Listen on Mixlr' button?",
+                        answer: "Some sermons are only linked from Mixlr rather than YouTube — tap the button to open it in Mixlr.",
+                    },
+                ],
+            },
+            {
+                id: "games",
+                label: "Games",
+                icon: Gamepad2,
+                visible: isModuleEnabled("games"),
+                items: [
+                    {
+                        id: "ga-1",
+                        question: "How do I join a game?",
+                        answer: "Under More, tap Games, then enter the join code your host shared (it looks like GAME-X7K2P9).",
+                    },
+                    {
+                        id: "ga-2",
+                        question: "How is my score calculated?",
+                        answer: "Correct answers score more the faster you answer — an instant correct answer earns full points, one submitted right before time runs out earns about half.",
+                    },
+                    {
+                        id: "ga-3",
+                        question: "Can I change my answer after submitting?",
+                        answer: "No — each question can only be answered once, so choose carefully.",
+                    },
+                ],
+            },
+            {
+                id: "volunteering",
+                label: "Volunteering",
+                icon: HandHeart,
+                visible: isModuleEnabled("volunteering"),
+                items: [
+                    {
+                        id: "vo-1",
+                        question: "How do I sign up to serve?",
+                        answer: "Under More, tap Volunteering to see open opportunities, then tap Sign Up on the one you want.",
+                    },
+                    {
+                        id: "vo-2",
+                        question: "Can I cancel after signing up?",
+                        answer: "Yes — tap Cancel My Spot on the opportunity to free up your place for someone else.",
+                    },
+                    {
+                        id: "vo-3",
+                        question: "Why does an opportunity say 'Full'?",
+                        answer: "Some opportunities have a limited number of spots — once capacity is reached, sign-up closes automatically.",
+                    },
+                ],
+            },
+            {
+                id: "small-groups",
+                label: "Fellowships",
+                icon: Users2,
+                visible: isModuleEnabled("small_groups"),
+                items: [
+                    {
+                        id: "sg-1",
+                        question: "How do I join a fellowship?",
+                        answer: "Under More, tap Fellowships, then Browse to see all fellowships and tap Join on the one you want.",
+                    },
+                    {
+                        id: "sg-2",
+                        question: "I'm a fellowship leader — how do I take attendance?",
+                        answer: "Under My Fellowships, your fellowship shows a Take Attendance button — pick the meeting date, mark each member Present or Absent, then Save.",
+                    },
+                    {
+                        id: "sg-3",
+                        question: "Can I be in more than one fellowship?",
+                        answer: "Yes — there's no limit on how many fellowships you can join.",
                     },
                 ],
             },
@@ -216,20 +328,63 @@ export const HelpPage = () => {
                 ],
             },
             {
+                id: "prayer-requests",
+                label: "Prayer Requests",
+                icon: HandHeart,
+                visible: true,
+                items: [
+                    {
+                        id: "prq-1",
+                        question: "How do I submit a prayer request?",
+                        answer: "Go to More > Prayer Requests and submit it under the Mine tab. It's private — seen only by the Prayer team and pastors, never posted anywhere public.",
+                    },
+                    {
+                        id: "prq-2",
+                        question: "How do I share a testimony?",
+                        answer: "Under More > Prayer Requests > Mine, tap Share next to My Testimonies. You choose whether it's shared on the public Testimonies feed — nothing is made public without your say.",
+                    },
+                    {
+                        id: "prq-3",
+                        question: "Can I link my testimony to a specific prayer request?",
+                        answer: "Yes — when sharing a testimony you can pick one of your own prayer requests from the list, or leave it as a general testimony not tied to any request.",
+                    },
+                    {
+                        id: "prq-4",
+                        question: "Who can see the Prayer Team tab?",
+                        answer: "Only workers in the Prayer department and pastors see it — it lists every member's prayer request and lets you update its status as Open, Prayed For, or Answered.",
+                    },
+                    {
+                        id: "prq-5",
+                        question: "How does the Pregnancy Prayer tab work?",
+                        answer: "It's only visible to Prayer department workers and pastors. Add a pregnant woman's name, EDD and details, then log each time she comes for prayer — the last-prayed date updates automatically, and her status can be moved to Delivered or Discontinued.",
+                    },
+                    {
+                        id: "prq-6",
+                        question: "Can I see every past visit, not just the last one?",
+                        answer: "Yes — tap History on a pregnancy case to see every logged visit, with the note and who prayed with her, newest first.",
+                    },
+                ],
+            },
+            {
                 id: "classes",
-                label: "Classes",
+                label: "Training Classes",
                 icon: GraduationCap,
                 visible: true,
                 items: [
                     {
                         id: "cl-1",
                         question: "How do I enroll in a class?",
-                        answer: "Browse the catalogue in the Classes tab, then speak with your department head or the class facilitator to be enrolled — it isn't self-service yet.",
+                        answer: "Browse the catalogue in the Training Classes tab, then speak with your department head or the class facilitator to be enrolled — it isn't self-service yet.",
                     },
                     {
                         id: "cl-2",
                         question: "Where can I see my enrollment status?",
-                        answer: "Check “My Enrollments” within the Classes tab for the status of every class you've joined.",
+                        answer: "Check “My Enrollments” within the Training Classes tab for the status of every class you've joined.",
+                    },
+                    {
+                        id: "cl-3",
+                        question: "How do I get my certificate?",
+                        answer: "Once your enrollment is marked Completed, an admin or facilitator issues your certificate — it then shows on your enrollment card in “My Enrollments”, with the certificate number if one was given.",
                     },
                 ],
             },
@@ -379,6 +534,34 @@ export const HelpPage = () => {
                 ],
             },
             {
+                id: "evangelism",
+                label: "Evangelism",
+                icon: Flame,
+                visible: true,
+                items: [
+                    {
+                        id: "evg-1",
+                        question: "How do I upload a convert I met on outreach?",
+                        answer: "Go to More > Evangelism > Upload, and add their name — phone and notes are optional. Any worker can do this, not just Evangelism department members.",
+                    },
+                    {
+                        id: "evg-2",
+                        question: "Who can see the Team Inbox tab?",
+                        answer: "Only workers in the Evangelism department. It lists every convert with who onboarded them, who's currently assigned to follow up, and flags anyone who hasn't been contacted in over 7 days.",
+                    },
+                    {
+                        id: "evg-3",
+                        question: "What do the convert statuses mean?",
+                        answer: "Unsaved → Saved → Undergoing Discipleship tracks their spiritual journey. Log a note every time you reach out.",
+                    },
+                    {
+                        id: "evg-4",
+                        question: "Can I see the full follow-up history for a convert, not just the last contact?",
+                        answer: "Yes — tap History on a convert in the Team Inbox to see every logged note, newest first, with who logged it and when.",
+                    },
+                ],
+            },
+            {
                 id: "follow-up",
                 label: "Follow-Up",
                 icon: UserPlus,
@@ -389,6 +572,25 @@ export const HelpPage = () => {
                         id: "fu-1",
                         question: "What is the Follow-Up tool for?",
                         answer: "More > Follow-Up tracks first-timers and the follow-up tasks assigned to you, so no one who visits gets missed. It's only visible to workers in the Follow-Up department.",
+                    },
+                ],
+            },
+            {
+                id: "admin-department",
+                label: "Admin Department",
+                icon: UserCheck,
+                badge: "Admin",
+                visible: isAdminDept,
+                items: [
+                    {
+                        id: "ad-1",
+                        question: "How do I check someone in who doesn't have a phone?",
+                        answer: "Go to More > Check Someone In, search for the member by name, pick the event and slot, and mark their status — only visible to workers in the Admin department.",
+                    },
+                    {
+                        id: "ad-2",
+                        question: "Can I use this to fix someone's missed attendance or restore a streak?",
+                        answer: "Yes — a streak is calculated live from check-in history, so using Check Someone In to mark a missed service present restores the streak automatically. There's no separate streak-repair tool.",
                     },
                 ],
             },
@@ -432,7 +634,7 @@ export const HelpPage = () => {
             },
         ];
         return all.filter((c) => c.visible);
-    }, [isWorker, isHod, isFollowUp, isChildrenChurchWorker, isSundaySchoolWorker]);
+    }, [isWorker, isHod, isFollowUp, isChildrenChurchWorker, isSundaySchoolWorker, isAdminDept, isModuleEnabled]);
 
     const flatMatches = useMemo(() => {
         if (!query.trim()) return null;

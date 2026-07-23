@@ -4,10 +4,12 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
+import { useModuleState } from "@/hooks/use-module-state";
 import {
-    ClipboardList, HeartHandshake, GraduationCap, HandMetal, Cake,
+    ClipboardList, GraduationCap, HandMetal, Cake,
     AlertTriangle, Calendar, History, ClipboardCheck, Users2, UserPlus, Baby,
-    Building2, BookOpenCheck,
+    Building2, BookOpenCheck, MessageSquareText, UserCheck, HeartHandshake, Flame, BookOpen, Gamepad2,
+    HandHelping,
 } from "lucide-react";
 
 type Tint = "cream" | "tan" | "dark";
@@ -18,6 +20,7 @@ interface GridTile {
     href: string;
     badge?: string;
     tint?: Tint;
+    moduleKey?: string;
 }
 
 const TINT_STYLES: Record<Tint, { circle: string; icon: string }> = {
@@ -73,33 +76,54 @@ export const ProfilePage = () => {
 
     const isWorker = profile?.role === "WORKER";
     const isHod = isWorker && !!profile?.isHod;
+    const isPastor = !!profile?.pastorType;
+    const isTrainee = isWorker && !!profile?.isTrainee;
     const isFollowUp = isWorker && (
         profile?.workerProfile?.department?.key === "FOLLOW_UP" ||
         profile?.workerProfile?.secondaryDepartment?.key === "FOLLOW_UP"
     );
+    const isAdminDept = isWorker && (
+        profile?.workerProfile?.department?.key === "ADMIN" ||
+        profile?.workerProfile?.secondaryDepartment?.key === "ADMIN"
+    );
+    const { isModuleEnabled } = useModuleState();
 
     const exploreTiles: GridTile[] = [
         { icon: ClipboardList, label: "My Stats", href: "/dashboard" },
-        { icon: HeartHandshake, label: "Giving", href: "/giving" },
-        { icon: GraduationCap, label: "Classes", href: "/classes" },
-        { icon: Baby, label: "Children's Church", href: "/children-church" },
+        { icon: GraduationCap, label: "Training Classes", href: "/classes", moduleKey: "classes" },
+        { icon: Baby, label: "Children's Church", href: "/children-church", moduleKey: "children_church" },
         { icon: Cake, label: "Birthday Wishes", href: "/birthdays" },
-        { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
-        { icon: Building2, label: "Facility Rental", href: "/facility-rental" },
-        { icon: BookOpenCheck, label: "Sunday School", href: "/sunday-school" },
-    ];
+        { icon: AlertTriangle, label: "Incidents", href: "/incidents", moduleKey: "incident_report" },
+        { icon: Building2, label: "Facility Rental", href: "/facility-rental", moduleKey: "facility_rental" },
+        { icon: BookOpenCheck, label: "Sunday School", href: "/sunday-school", moduleKey: "sunday_school" },
+        { icon: HeartHandshake, label: "Prayer Requests", href: "/prayer-requests", moduleKey: "prayer" },
+        { icon: BookOpen, label: "Sermons", href: "/sermons", moduleKey: "sermons" },
+        { icon: Gamepad2, label: "Games", href: "/games", moduleKey: "games" },
+        { icon: HandHelping, label: "Volunteering", href: "/volunteering", moduleKey: "volunteering" },
+        { icon: Users2, label: "Fellowships", href: "/small-groups", moduleKey: "small_groups" },
+    ].filter((t) => isModuleEnabled(t.moduleKey));
 
-    const ministryTiles: GridTile[] = isWorker ? [
-        { icon: HandMetal, label: "Prayer Roster", href: "/prayer", tint: "tan", badge: "Workers" },
-        { icon: Calendar, label: "Leave Request", href: "/leave", tint: "tan" },
-        { icon: History, label: "Service History", href: "/service-history", tint: "tan" },
-        ...(isFollowUp ? [{ icon: UserPlus, label: "Follow-Up", href: "/follow-up", tint: "tan" as Tint }] : []),
-    ] : [];
+    const ministryTiles: GridTile[] = (isWorker ? [
+        { icon: HandMetal, label: "Prayer Roster", href: "/prayer", tint: "tan" as Tint, badge: "Workers", moduleKey: "prayer" },
+        { icon: Calendar, label: "Leave Request", href: "/leave", tint: "tan" as Tint },
+        { icon: History, label: "Service History", href: "/service-history", tint: "tan" as Tint },
+        { icon: Flame, label: "Evangelism", href: "/evangelism", tint: "tan" as Tint, moduleKey: "evangelism" },
+        ...(isFollowUp ? [{ icon: UserPlus, label: "Follow-Up", href: "/follow-up", tint: "tan" as Tint, moduleKey: "follow_up" }] : []),
+    ] : []).filter((t) => isModuleEnabled(t.moduleKey));
 
-    const leadershipTiles: GridTile[] = isHod ? [
-        { icon: ClipboardCheck, label: "Dept. Attendance", href: "/attendance/department", tint: "dark", badge: "HOD" },
-        { icon: Users2, label: "Dept. Summary", href: "/department-summary", tint: "dark", badge: "HOD" },
-    ] : [];
+    const leadershipTiles: GridTile[] = [
+        ...(isHod ? [
+            { icon: ClipboardCheck, label: "Dept. Attendance", href: "/attendance/department", tint: "dark" as Tint, badge: "HOD" },
+            { icon: Users2, label: "Dept. Summary", href: "/department-summary", tint: "dark" as Tint, badge: "HOD" },
+            { icon: MessageSquareText, label: "Weekly Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "HOD", moduleKey: "pastor_feedback" },
+        ] : []),
+        ...(isPastor && !isHod ? [
+            { icon: MessageSquareText, label: "Pastor Feedback", href: "/pastor-feedback", tint: "dark" as Tint, badge: "Pastor", moduleKey: "pastor_feedback" },
+        ] : []),
+        ...(isAdminDept ? [
+            { icon: UserCheck, label: "Check Someone In", href: "/admin-checkin", tint: "dark" as Tint, badge: "Admin" },
+        ] : []),
+    ].filter((t) => isModuleEnabled(t.moduleKey));
 
     const fullName = profile ? `${profile?.firstname ?? ""}`.trim() : "";
 
@@ -114,11 +138,18 @@ export const ProfilePage = () => {
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute bottom-0 inset-x-0 p-6">
                     <span className="text-xs uppercase tracking-widest text-white/80 font-semibold drop-shadow-sm">More</span>
-                    <h1 className="text-2xl font-light tracking-tight text-white mt-1 drop-shadow-md">
-                        {isLoading
-                            ? <span className="inline-block h-7 w-40 bg-white/20 rounded animate-pulse" />
-                            : fullName ? `Hi, ${fullName}` : "Everything Else"}
-                    </h1>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <h1 className="text-2xl font-light tracking-tight text-white drop-shadow-md">
+                            {isLoading
+                                ? <span className="inline-block h-7 w-40 bg-white/20 rounded animate-pulse" />
+                                : fullName ? `Hi, ${fullName}` : "Everything Else"}
+                        </h1>
+                        {!isLoading && isTrainee && (
+                            <span className="inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full bg-amber-400 text-[#121212]">
+                                Training
+                            </span>
+                        )}
+                    </div>
                     {!isLoading && (
                         <p className="text-xs text-white/70 font-light mt-1 drop-shadow-sm">{subtitle}</p>
                     )}

@@ -11,8 +11,15 @@ function useIsStandalone(): boolean | null {
     const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
 
     useEffect(() => {
+        // manifest.json declares display: "fullscreen" — Android launches an
+        // installed app in whichever of fullscreen/standalone/minimal-ui it
+        // actually granted, so all three count as "installed", not just
+        // "standalone" (checking that alone left a correctly installed app
+        // stuck on the install wall).
         const standalone =
+            window.matchMedia("(display-mode: fullscreen)").matches ||
             window.matchMedia("(display-mode: standalone)").matches ||
+            window.matchMedia("(display-mode: minimal-ui)").matches ||
             (window.navigator as unknown as { standalone?: boolean }).standalone === true;
         setIsStandalone(standalone);
     }, []);

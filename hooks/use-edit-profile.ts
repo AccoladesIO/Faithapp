@@ -38,6 +38,34 @@ export function useEditProfile() {
         }
     }, []);
 
+    const updateMyPhoto = useCallback(async (file: File) => {
+        setIsSubmitting(true);
+        try {
+            const formData = new FormData();
+            formData.append("photo", file);
+            const res = await api.post("/members/me/photo", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            return res.data?.data;
+        } catch (err: unknown) {
+            throw new Error(extractMessage(err, "Failed to upload photo."));
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, []);
+
+    const removeMyPhoto = useCallback(async () => {
+        setIsSubmitting(true);
+        try {
+            const res = await api.delete("/members/me/photo");
+            return res.data?.data;
+        } catch (err: unknown) {
+            throw new Error(extractMessage(err, "Failed to remove photo."));
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, []);
+
     const requestEmailChange = useCallback(async (newEmail: string) => {
         setIsSubmitting(true);
         try {
@@ -62,5 +90,5 @@ export function useEditProfile() {
         }
     }, []);
 
-    return { isSubmitting, updateMyProfile, requestEmailChange, confirmEmailChange };
+    return { isSubmitting, updateMyProfile, updateMyPhoto, removeMyPhoto, requestEmailChange, confirmEmailChange };
 }

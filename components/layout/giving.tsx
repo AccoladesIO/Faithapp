@@ -5,11 +5,11 @@ import Image from "next/image";
 import {
     HeartHandshake, ShieldCheck, CheckCircle2, AlertCircle, Loader2,
     Landmark, History, Copy, Check, Upload, FileText, Download,
-    Briefcase, X, Building2, ChevronDown, Target,
+    Briefcase, X, Building2, ChevronDown, Target, Sparkles,
     ArrowLeft,
 } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
-import { useTithes, ProofStatus } from "@/hooks/use-tithes";
+import { useTithes, ProofStatus, TitheAccount } from "@/hooks/use-tithes";
 import { useFinanceRequests, FinanceRequestStatus } from "@/hooks/use-finance-requests";
 import { PledgesSection } from "@/components/layout/giving-pledges";
 import { useRouter } from "next/navigation";
@@ -67,6 +67,40 @@ function CopyField({ label, value }: { label: string; value: string }) {
     );
 }
 
+// ─── Giving accounts (the actual accounts to give to) ──────────────────────────
+
+export function GivingAccountsCard({ accounts }: { accounts: TitheAccount[] }) {
+    const activeAccounts = accounts.filter((a) => a.isActive);
+    if (activeAccounts.length === 0) return null;
+
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center gap-1.5 px-1">
+                <Landmark size={13} className="text-[#756E69]" />
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                    {activeAccounts.length > 1 ? "Give To Any Of These Accounts" : "Give To This Account"}
+                </span>
+            </div>
+            {/* Capped height once accounts start stacking, so the list scrolls in
+                place instead of pushing the rest of the page down as accounts grow. */}
+            <div className={activeAccounts.length > 2 ? "space-y-3 max-h-80 overflow-y-auto pr-1 -mr-1" : "space-y-3"}>
+                {activeAccounts.map((account) => (
+                    <div key={account.id} className="bg-white border border-[#121212]/10 rounded-2xl p-5 shadow-sm">
+                        <div className="flex items-center justify-between mb-1">
+                            <p className="text-sm font-medium text-[#121212]">{account.accountName}</p>
+                            <span className="text-[9px] uppercase tracking-wider font-bold bg-[#F4F1EA] text-[#756E69] px-2 py-0.5 rounded-full">
+                                {account.currency}
+                            </span>
+                        </div>
+                        <p className="text-xs text-gray-500 font-light mb-2">{account.bankName}</p>
+                        <CopyField label="Account Number" value={account.accountNumber} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // ─── Virtual account card ───────────────────────────────────────────────────────
 
 function VirtualAccountCard() {
@@ -114,22 +148,19 @@ function VirtualAccountCard() {
     }
 
     return (
-        <div className="bg-[#F4F1EA]/50 rounded-2xl p-5 border border-[#121212]/5">
+        <div className={showBvnForm
+            ? "bg-[#F4F1EA]/50 rounded-2xl p-5 border border-[#121212]/5"
+            : "bg-[#F9F9F9] rounded-2xl p-5 border-2 border-dashed border-[#121212]/10"
+        }>
             {!showBvnForm ? (
                 <div className="text-center py-2">
-                    <Building2 size={20} className="text-[#756E69] mx-auto mb-2" />
-                    <h4 className="text-sm font-medium text-[#121212] mb-1">Set Up Your Giving Account</h4>
-                    <p className="text-xs text-gray-500 font-light mb-4">
-                        Get a dedicated bank account number for tithes and offerings.
-                    </p>
-                    {/* <button
-                        type="button"
-                        onClick={() => setShowBvnForm(true)}
-                        className="bg-[#121212] text-white text-xs uppercase tracking-widest font-semibold px-5 py-2.5 rounded-xl hover:bg-gray-800 transition-colors"
-                    >
-                        Generate Account
-                    </button> */}
-                    <p className="text-xs text-gray-500 font-light"> Coming soon!
+                    <div className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold bg-[#EADCC9] text-[#121212] px-2.5 py-1 rounded-full mb-3">
+                        <Sparkles size={10} /> Coming Soon
+                    </div>
+                    <Building2 size={20} className="text-gray-400 mx-auto mb-2" />
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">Dedicated Giving Account</h4>
+                    <p className="text-xs text-gray-400 font-light">
+                        A personal bank account number for tithes and offerings — not yet available. Use the account above for now.
                     </p>
                 </div>
             ) : (
@@ -612,14 +643,17 @@ export const GivingPage = () => {
                         </div>
                     )}
 
-                    {/* Virtual account */}
-                    <VirtualAccountCard />
+                    {/* Accounts to give to */}
+                    <GivingAccountsCard accounts={accounts} />
 
                     {/* Proof of payment */}
                     <ProofOfPaymentForm accounts={accounts} />
 
                     {/* Tithe statement email */}
                     <TitheStatementEmail />
+
+                    {/* Virtual account — not yet implemented, de-emphasized */}
+                    <VirtualAccountCard />
 
                     {/* <p className="text-[11px] text-gray-500 font-light text-center flex items-center justify-center gap-1">
                         <ShieldCheck size={12} className="text-green-600" /> Bank-grade processing • Secure Ledger

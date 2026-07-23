@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import {
     Calendar as CalendarIcon,
@@ -12,6 +12,7 @@ import {
     BarChart3,
     RefreshCw,
     Info,
+    Star,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,6 +20,8 @@ import {
     AttendanceRecord,
     AttendanceStatus,
 } from "@/hooks/use-attendance-history";
+import { useSubmitServiceRating, useMyServiceRating } from "@/hooks/use-service-ratings";
+import { useModuleState } from "@/hooks/use-module-state";
 import { getAttendanceRateStyle } from "@/utils/attendance-rate-style";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -93,7 +96,50 @@ function StatusBadge({ status }: { status: AttendanceStatus }) {
 
 // ─── Attendance card ──────────────────────────────────────────────────────────
 
+function RatingWidget({ eventId, serviceSlotId }: Readonly<{ eventId: string; serviceSlotId: string }>) {
+    const { isSubmitting, submitRating } = useSubmitServiceRating();
+    const { rating: myRating, isLoading: isLoadingMine } = useMyServiceRating(eventId, serviceSlotId);
+    const [rated, setRated] = useState<number | null>(null);
+    const effectiveRated = rated ?? myRating;
+
+    const handleRate = async (rating: number) => {
+        if (effectiveRated !== null || isSubmitting) return;
+        const ok = await submitRating(eventId, serviceSlotId, rating);
+        if (ok) setRated(rating);
+    };
+
+    if (isLoadingMine) {
+        return <div className="h-6 mt-2 pt-2 border-t border-[#121212]/5" />;
+    }
+
+    return (
+        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[#121212]/5">
+            <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400">
+                {effectiveRated ? "Thanks for rating!" : "Rate this service"}
+            </span>
+            <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                        key={n}
+                        type="button"
+                        onClick={() => handleRate(n)}
+                        disabled={effectiveRated !== null || isSubmitting}
+                        aria-label={`Rate ${n} star${n > 1 ? "s" : ""}`}
+                        className="disabled:cursor-default"
+                    >
+                        <Star
+                            size={14}
+                            className={(effectiveRated ?? 0) >= n ? "fill-[#121212] text-[#121212]" : "text-[#121212]/20"}
+                        />
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function AttendanceCard({ record }: { record: AttendanceRecord }) {
+    const { isModuleEnabled } = useModuleState();
     const isAbsent = record.status === "ABSENT";
 
     // Date: prefer event.eventDate, fall back to createdAt
@@ -109,31 +155,36 @@ function AttendanceCard({ record }: { record: AttendanceRecord }) {
     const subtitle = record.event?.description ?? record.serviceSlot?.name ?? null;
 
     const eventType = formatEventType(record);
+    const canRate = !isAbsent && record.event && record.serviceSlot && isModuleEnabled("service_ratings");
 
     return (
-        <div className={`bg-white border border-[#121212]/5 p-4 shadow-sm flex items-center justify-between transition-all hover:border-[#121212]/10 ${isAbsent ? "opacity-65" : ""}`}>
-            <div className="flex items-start gap-4 flex-grow pr-2">
-                <div className="bg-[#F4F1EA] text-[#121212] px-3 py-2 h-[100px] flex flex-col items-center justify-center min-w-[68px] border border-[#121212]/5 flex-shrink-0">
-                    <span className="text-xs font-bold leading-none text-center">{month}</span>
-                    <span className="text-lg font-bold tracking-tighter leading-none mt-1">{day}</span>
+        <div className={`bg-white border border-[#121212]/5 p-4 shadow-sm transition-all hover:border-[#121212]/10 ${isAbsent ? "opacity-65" : ""}`}>
+            <div className="flex items-center justify-between">
+                <div className="flex items-start gap-4 flex-grow pr-2">
+                    <div className="bg-[#F4F1EA] text-[#121212] px-3 py-2 h-[100px] flex flex-col items-center justify-center min-w-[68px] border border-[#121212]/5 flex-shrink-0">
+                        <span className="text-xs font-bold leading-none text-center">{month}</span>
+                        <span className="text-lg font-bold tracking-tighter leading-none mt-1">{day}</span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500">{eventType}</span>
+                        <h3 className="text-sm font-medium text-[#121212] leading-snug">{title}</h3>
+                        {subtitle && <p className="text-xs text-gray-500 font-light">{subtitle}</p>}
+                    </div>
                 </div>
 
-                <div className="space-y-0.5">
-                    <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500">{eventType}</span>
-                    <h3 className="text-sm font-medium text-[#121212] leading-snug">{title}</h3>
-                    {subtitle && <p className="text-xs text-gray-500 font-light">{subtitle}</p>}
+                <div className="flex flex-col items-end justify-between self-stretch min-w-[85px] text-right">
+                    <StatusBadge status={record.status} />
+                    {record.checkinTime && (
+                        <span className="text-[10px] text-gray-500 font-light flex items-center justify-end gap-0.5">
+                            <Clock size={10} />
+                            {formatCheckinTime(record.checkinTime)}
+                        </span>
+                    )}
                 </div>
             </div>
 
-            <div className="flex flex-col items-end justify-between self-stretch min-w-[85px] text-right">
-                <StatusBadge status={record.status} />
-                {record.checkinTime && (
-                    <span className="text-[10px] text-gray-500 font-light flex items-center justify-end gap-0.5">
-                        <Clock size={10} />
-                        {formatCheckinTime(record.checkinTime)}
-                    </span>
-                )}
-            </div>
+            {canRate && <RatingWidget eventId={record.event!.id} serviceSlotId={record.serviceSlot!.id} />}
         </div>
     );
 }

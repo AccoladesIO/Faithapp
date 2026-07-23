@@ -1,14 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
     ArrowLeft, LogOut, Bell, CircleHelp, Mail, BookOpen, ChevronRight, Pencil, UserCircle2,
+    Camera, X, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useProfile, PASTOR_TYPE_LABELS } from "@/hooks/use-profile";
+import { useEditProfile } from "@/hooks/use-edit-profile";
 import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
+import { Avatar } from "@/components/ui/avatar";
+
+const MAX_PHOTO_SIZE_MB = 3;
 
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "editorial.discovery@gmail.com";
 const CHURCH_NAME = process.env.NEXT_PUBLIC_CHURCH_NAME ?? "RCCG Discovery Centre";
@@ -26,14 +31,46 @@ function formatBirthday(
 export default function AccountPage() {
     const router = useRouter();
     const { logout } = useAuth() ?? {};
-    const { profile, isLoading } = useProfile() ?? {};
+    const { profile, isLoading, refetch } = useProfile() ?? {};
+    const { isSubmitting: isPhotoSubmitting, updateMyPhoto, removeMyPhoto } = useEditProfile();
+    const [photoError, setPhotoError] = useState<string | null>(null);
 
     const fullName = profile ? `${profile?.firstname ?? ""} ${profile?.lastname ?? ""}` : "";
-    const initials = fullName.trim().split(" ").filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
 
     const senderLine = profile?.email ? `— ${fullName.trim() || "Name"} (${profile.email})` : `— ${fullName.trim() || "Name"}`;
     const supportMailtoBody = [`Hi, ${CHURCH_NAME}`, "", "", "", senderLine].join("\n");
     const supportMailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Support & Pastoral Care Request")}&body=${encodeURIComponent(supportMailtoBody)}`;
+
+    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+        setPhotoError(null);
+        if (!file.type.startsWith("image/")) {
+            setPhotoError("Please choose an image file.");
+            return;
+        }
+        if (file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024) {
+            setPhotoError(`Image must be under ${MAX_PHOTO_SIZE_MB}MB.`);
+            return;
+        }
+        try {
+            await updateMyPhoto(file);
+            refetch?.();
+        } catch (err: unknown) {
+            setPhotoError(err instanceof Error ? err.message : "Failed to upload photo.");
+        }
+    };
+
+    const handleRemovePhoto = async () => {
+        setPhotoError(null);
+        try {
+            await removeMyPhoto();
+            refetch?.();
+        } catch (err: unknown) {
+            setPhotoError(err instanceof Error ? err.message : "Failed to remove photo.");
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#FFFFFF] text-[#121212] pb-12 font-sans selection:bg-[#121212] selection:text-[#FFFFFF] animate-fade-in-up">
@@ -72,8 +109,25 @@ export default function AccountPage() {
                     {isLoading ? (
                         <div className="w-14 h-14 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
                     ) : (
-                        <div className="w-14 h-14 rounded-full bg-[#121212] flex items-center justify-center flex-shrink-0">
-                            <span className="text-lg font-semibold text-white uppercase">{initials}</span>
+                        <div className="relative flex-shrink-0">
+                            <Avatar photoUrl={profile?.photoUrl} name={fullName} size={56} textSize="text-lg" />
+                            <label
+                                aria-label={profile?.photoUrl ? "Change photo" : "Add photo"}
+                                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#121212] border-2 border-white flex items-center justify-center cursor-pointer hover:bg-gray-800 transition-colors"
+                            >
+                                {isPhotoSubmitting ? (
+                                    <Loader2 size={11} className="text-white animate-spin" />
+                                ) : (
+                                    <Camera size={11} className="text-white" />
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    disabled={isPhotoSubmitting}
+                                    onChange={handlePhotoChange}
+                                    className="hidden"
+                                />
+                            </label>
                         </div>
                     )}
                     <div className="min-w-0">
@@ -90,8 +144,23 @@ export default function AccountPage() {
                                 )}
                             </div>
                         )}
+                        {!isLoading && profile?.photoUrl && (
+                            <button
+                                type="button"
+                                onClick={handleRemovePhoto}
+                                disabled={isPhotoSubmitting}
+                                className="flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-gray-500 hover:text-red-600 transition-colors mt-1.5 disabled:opacity-50"
+                            >
+                                <X size={10} /> Remove Photo
+                            </button>
+                        )}
                     </div>
                 </div>
+                {photoError && (
+                    <p className="text-xs text-red-600 font-light bg-red-50 px-3 py-2.5 rounded-xl border border-red-100">
+                        {photoError}
+                    </p>
+                )}
 
                 {!isLoading && profile && (
                     <div className="bg-[#F9F9F9] rounded-2xl p-4 text-xs text-gray-600 font-light space-y-2">
