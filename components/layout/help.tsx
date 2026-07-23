@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
+import { useModuleState } from "@/hooks/use-module-state";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ function FaqRow({
 export const HelpPage = () => {
     const router = useRouter();
     const { profile, isLoading } = useProfile();
+    const { isModuleEnabled } = useModuleState();
     const [query, setQuery] = useState("");
     const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -135,7 +137,7 @@ export const HelpPage = () => {
                 id: "sermons",
                 label: "Sermons",
                 icon: BookOpen,
-                visible: true,
+                visible: isModuleEnabled("sermons"),
                 items: [
                     {
                         id: "se-1",
@@ -153,7 +155,7 @@ export const HelpPage = () => {
                 id: "games",
                 label: "Games",
                 icon: Gamepad2,
-                visible: true,
+                visible: isModuleEnabled("games"),
                 items: [
                     {
                         id: "ga-1",
@@ -169,6 +171,52 @@ export const HelpPage = () => {
                         id: "ga-3",
                         question: "Can I change my answer after submitting?",
                         answer: "No — each question can only be answered once, so choose carefully.",
+                    },
+                ],
+            },
+            {
+                id: "volunteering",
+                label: "Volunteering",
+                icon: HandHeart,
+                visible: isModuleEnabled("volunteering"),
+                items: [
+                    {
+                        id: "vo-1",
+                        question: "How do I sign up to serve?",
+                        answer: "Under More, tap Volunteering to see open opportunities, then tap Sign Up on the one you want.",
+                    },
+                    {
+                        id: "vo-2",
+                        question: "Can I cancel after signing up?",
+                        answer: "Yes — tap Cancel My Spot on the opportunity to free up your place for someone else.",
+                    },
+                    {
+                        id: "vo-3",
+                        question: "Why does an opportunity say 'Full'?",
+                        answer: "Some opportunities have a limited number of spots — once capacity is reached, sign-up closes automatically.",
+                    },
+                ],
+            },
+            {
+                id: "small-groups",
+                label: "Fellowships",
+                icon: Users2,
+                visible: isModuleEnabled("small_groups"),
+                items: [
+                    {
+                        id: "sg-1",
+                        question: "How do I join a fellowship?",
+                        answer: "Under More, tap Fellowships, then Browse to see all fellowships and tap Join on the one you want.",
+                    },
+                    {
+                        id: "sg-2",
+                        question: "I'm a fellowship leader — how do I take attendance?",
+                        answer: "Under My Fellowships, your fellowship shows a Take Attendance button — pick the meeting date, mark each member Present or Absent, then Save.",
+                    },
+                    {
+                        id: "sg-3",
+                        question: "Can I be in more than one fellowship?",
+                        answer: "Yes — there's no limit on how many fellowships you can join.",
                     },
                 ],
             },
@@ -586,7 +634,7 @@ export const HelpPage = () => {
             },
         ];
         return all.filter((c) => c.visible);
-    }, [isWorker, isHod, isFollowUp, isChildrenChurchWorker, isSundaySchoolWorker, isAdminDept]);
+    }, [isWorker, isHod, isFollowUp, isChildrenChurchWorker, isSundaySchoolWorker, isAdminDept, isModuleEnabled]);
 
     const flatMatches = useMemo(() => {
         if (!query.trim()) return null;

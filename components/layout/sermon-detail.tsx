@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
-import { ArrowLeft, AlertCircle, BookOpen, Radio } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowLeft, AlertCircle, BookOpen, Radio, NotebookPen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSermon } from "@/hooks/use-sermons";
+import { useSermonNote } from "@/hooks/use-sermon-notes";
 
 function formatFullDate(iso: string): string {
     return new Date(iso).toLocaleDateString("en-GB", {
@@ -124,8 +125,95 @@ export const SermonDetailPage = ({ id }: { id: string }) => {
                             {sermon.description}
                         </p>
                     )}
+
+                    <div className="pt-6 mt-6 border-t border-[#121212]/5">
+                        <h2 className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-2 flex items-center gap-1.5">
+                            <NotebookPen size={12} /> My Notes
+                        </h2>
+                        <SermonNotesSection sermonId={id} />
+                    </div>
                 </div>
             ) : null}
         </div>
     );
 };
+
+// Only rendered once the note has finished loading, so the editor below can
+// seed its textarea from `useState` directly — no reset-on-load effect needed.
+function SermonNotesSection({ sermonId }: Readonly<{ sermonId: string }>) {
+    const { note, isLoading, isSaving, error, saveNote, deleteNote } = useSermonNote(sermonId);
+
+    if (isLoading) {
+        return <div className="h-24 w-full bg-gray-50 rounded-xl animate-pulse" />;
+    }
+
+    return (
+        <SermonNoteEditor
+            key={note?.id ?? "new"}
+            initialText={note?.note ?? ""}
+            hasNote={!!note}
+            isSaving={isSaving}
+            error={error}
+            saveNote={saveNote}
+            deleteNote={deleteNote}
+        />
+    );
+}
+
+function SermonNoteEditor({
+    initialText,
+    hasNote,
+    isSaving,
+    error,
+    saveNote,
+    deleteNote,
+}: Readonly<{
+    initialText: string;
+    hasNote: boolean;
+    isSaving: boolean;
+    error: string | null;
+    saveNote: (note: string) => Promise<void>;
+    deleteNote: () => Promise<void>;
+}>) {
+    const [text, setText] = useState(initialText);
+    const hasChanges = text.trim() !== initialText;
+    const saveLabel = isSaving ? "Saving…" : hasNote ? "Update Note" : "Save Note";
+
+    return (
+        <div className="space-y-2">
+            <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Jot down your thoughts on this message…"
+                rows={4}
+                className="w-full p-3 bg-[#F4F1EA]/40 border border-[#121212]/10 rounded-xl text-sm text-[#121212] font-light focus:outline-none focus:border-[#121212] resize-none"
+            />
+            {error && <p className="text-xs text-red-500">{error}</p>}
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => saveNote(text.trim())}
+                    disabled={isSaving || !hasChanges || !text.trim()}
+                    className="px-4 py-2 bg-[#121212] text-white text-xs font-semibold uppercase tracking-wider rounded-lg disabled:opacity-40 transition-colors"
+                >
+                    {saveLabel}
+                </button>
+                {hasNote && (
+                    <button
+                        onClick={async () => {
+                            try {
+                                await deleteNote();
+                                setText("");
+                            } catch {
+                                // error already surfaced via the hook's own error state
+                            }
+                        }}
+                        disabled={isSaving}
+                        className="px-4 py-2 text-gray-500 text-xs font-semibold uppercase tracking-wider rounded-lg hover:text-red-500 transition-colors disabled:opacity-40"
+                    >
+                        Delete
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}

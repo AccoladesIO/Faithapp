@@ -9,6 +9,7 @@ import {
     ClipboardList, GraduationCap, HandMetal, Cake,
     AlertTriangle, Calendar, History, ClipboardCheck, Users2, UserPlus, Baby,
     Building2, BookOpenCheck, MessageSquareText, UserCheck, HeartHandshake, Flame, BookOpen, Gamepad2,
+    HandHelping,
 } from "lucide-react";
 
 type Tint = "cream" | "tan" | "dark";
@@ -98,6 +99,8 @@ export const ProfilePage = () => {
         { icon: HeartHandshake, label: "Prayer Requests", href: "/prayer-requests", moduleKey: "prayer" },
         { icon: BookOpen, label: "Sermons", href: "/sermons", moduleKey: "sermons" },
         { icon: Gamepad2, label: "Games", href: "/games", moduleKey: "games" },
+        { icon: HandHelping, label: "Volunteering", href: "/volunteering", moduleKey: "volunteering" },
+        { icon: Users2, label: "Fellowships", href: "/small-groups", moduleKey: "small_groups" },
     ].filter((t) => isModuleEnabled(t.moduleKey));
 
     const ministryTiles: GridTile[] = (isWorker ? [
